@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiálogoGemini</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+    <!-- Janela Modal para a Chave API (sem alterações) -->
+    <div id="api-key-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Chave da API do Google Gemini</h2>
+            <p>Por favor, insira sua chave da API para começar a usar o chat. Sua chave será salva apenas no seu navegador.</p>
+            <input type="password" id="api-key-input" placeholder="Cole sua chave aqui...">
+            <button id="save-api-key-btn">Salvar e Iniciar</button>
+        </div>
+    </div>
+
+    <!-- Container Principal da Aplicação -->
+    <div id="app-container">
+        <header>
+            <h1>DiálogoGemini</h1>
+        </header>
+        
+        <main>
+            <div id="chat-window">
+                <!-- As mensagens aparecerão aqui -->
+            </div>
+
+            <!-- NOVO: Indicador de Carregamento (Spinner) -->
+            <div id="loading-indicator" class="hidden">
+                <div class="spinner"></div>
+            </div>
+
+            <!-- NOVO: Container para o botão "Continuar" -->
+            <div id="continue-container" class="hidden">
+                <button id="continue-btn">Continuar</button>
+            </div>
+        </main>
+        
+        <footer>
+            <div id="controls">
+                <a href="#" id="change-api-key-link">Alterar Chave API</a>
+                <a href="#" id="new-chat-link">Nova Conversa</a>
+            </div>
+            <div id="prompt-container">
+                <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." disabled>
+                <button id="send-btn" disabled>Enviar</button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
+    <script async src="https://app.gptmaker.ai/widget/3E3BFFBBC4641249C0729E18DC1FD70E/float.js"></script>
+</body>
+</html>
