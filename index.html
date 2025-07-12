@@ -4,22 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DiálogoGemini</title>
-    <!-- A FOLHA DE ESTILOS VEM PRIMEIRO -->
-    <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="./estilo.css">
 </head>
 <body>
 
-    <!-- Janela Modal para a Chave API -->
     <div id="api-key-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2>Chave da API do Google Gemini</h2>
             <p>Por favor, insira sua chave da API para começar a usar o chat. Sua chave será salva apenas no seu navegador.</p>
-            <input type="password" id="api-key-input" placeholder="Cole sua chave aqui...">
+            <input type="password" id="api-key-input" placeholder="Cole sua chave aqui..." autocomplete="off">
             <button id="save-api-key-btn">Salvar e Iniciar</button>
         </div>
     </div>
 
-    <!-- Container Principal da Aplicação -->
     <div id="app-container">
         <header>
             <h1>DiálogoGemini</h1>
@@ -34,6 +31,7 @@
         <footer>
             <div id="controls">
                 <a href="#" id="change-api-key-link">Alterar Chave API</a>
+                <a href="#" id="show-tour-link">Guia Inicial</a>
                 <div id="speed-control-container">
                     <label for="speed-slider">Velocidade</label>
                     <input type="range" id="speed-slider" min="50" max="250" value="180">
@@ -47,9 +45,7 @@
         </footer>
     </div>
 
-    <!-- OS SCRIPTS VÊM NO FINAL DO BODY -->
-    <!-- CORREÇÃO: Usando a tag <script> para um arquivo JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
 </body>
 </html>
