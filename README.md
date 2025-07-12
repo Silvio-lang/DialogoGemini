@@ -1,2 +1,2 @@
 # DialogoGemini
-Chat com modelos do Gemini - características inéditas no momento da criação
+Chat com modelos do Gemini - características
