@@ -32,6 +32,7 @@ header {
     padding: 15px 20px;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative; 
 }
 
 header h1 {
@@ -298,4 +299,207 @@ footer {
     background: #4A90E2;
     cursor: pointer;
     border-radius: 50%;
+}
+
+/* ================================================================ */
+/* ESTILOS DA SIDEBAR DE FERRAMENTAS                                */
+/* ================================================================ */
+
+/* --- Botão de Ferramentas no Cabeçalho --- */
+.tools-btn {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%); /* Alinha o botão verticalmente ao centro do header */
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.8em; /* Tamanho do ícone de engrenagem */
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+/* --- Estrutura Principal da Sidebar (Gaveta) --- */
+.sidebar {
+    height: 100%;
+    width: 300px;
+    max-width: 85%; /* Garante que no celular não ocupe a tela toda */
+    position: fixed; /* Fica por cima de todo o conteúdo */
+    top: 0;
+    right: -320px; /* Começa escondida 320px para a direita, fora da tela */
+    background-color: #f8f9fa; /* Um cinza bem claro */
+    box-shadow: -2px 0 8px rgba(0,0,0,0.15); /* Sombra para dar profundidade */
+    z-index: 1001; /* Z-index mais alto que o modal para ficar na frente de tudo */
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease-in-out; /* A MÁGICA! Anima a propriedade 'right' */
+}
+
+/* --- Estado "Aberto" da Sidebar --- */
+.sidebar.open {
+    right: 0; /* Move a sidebar para a tela, fazendo-a deslizar */
+}
+
+/* --- Cabeçalho da Sidebar --- */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #343a40;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2em;
+    font-weight: bold;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+/* --- Área de Conteúdo da Sidebar --- */
+.sidebar-content {
+    padding: 20px;
+    overflow-y: auto; /* Adiciona scroll se o conteúdo for maior que a tela */
+    flex-grow: 1;
+}
+
+/* ================================================================ */
+/* ESTILOS DO CONTEÚDO DA SIDEBAR                                   */
+/* ================================================================ */
+
+/* --- Seções de Ferramentas --- */
+.tool-section {
+    margin-bottom: 20px;
+}
+
+.tool-section h3 {
+    font-size: 1em;
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 15px; /* Mais espaço abaixo do título */
+    border-bottom: 1px solid #dee2e6;
+    padding-bottom: 8px; /* Espaçamento entre o texto e a linha */
+}
+
+/* --- Linha Separadora --- */
+hr {
+    border: none;
+    border-top: 1px solid #dee2e6;
+    margin: 25px 0; /* Mais espaço vertical */
+}
+
+/* --- Input e Botões da Sidebar --- */
+#conversation-name-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-sizing: border-box; /* Garante que padding não afete a largura total */
+    font-size: 0.9em;
+}
+
+.sidebar-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
+    transition: background-color 0.2s;
+}
+
+.sidebar-btn:hover {
+    background-color: #0056b3;
+}
+
+
+/* --- Lista de Conversas Salvas --- */
+#saved-conversations-list {
+    max-height: 45vh; /* Limita a altura para evitar que a lista fique enorme */
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+/* --- Itens Individuais da Lista (Serão criados pelo JS) --- */
+.saved-conversation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border-bottom: 1px solid #e9ecef;
+    gap: 10px; /* Espaço entre as informações e os botões */
+}
+/* Remove a borda do último item para um visual mais limpo */
+.saved-conversation-item:last-child {
+    border-bottom: none;
+}
+
+.conversation-info {
+    flex-grow: 1; /* Permite que esta div cresça para ocupar o espaço */
+    overflow: hidden; /* Esconde texto que transborda */
+}
+
+/* Estilos para o nome e data da conversa */
+.conversation-info .name {
+    display: block;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #343a40;
+    white-space: normal; /* PERMITE a quebra de linha */
+    word-wrap: break-word; /* Força a quebra de palavras muito longas sem espaço */
+}
+
+.conversation-info .timestamp {
+    display: block;
+    font-size: 0.75em;
+    color: #6c757d;
+}
+
+/* --- Botões de Ação (Carregar, Excluir) --- */
+.conversation-actions {
+    display: flex; /* Alinha os botões lado a lado */
+    flex-shrink: 0; /* Impede que os botões encolham */
+}
+
+.conversation-actions button {
+    border: none;
+    padding: 6px 10px;
+    margin-left: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    color: white;
+    transition: opacity 0.2s;
+}
+.conversation-actions button:hover {
+    opacity: 0.85;
+}
+
+/* Cores específicas para os botões de ação */
+.load-btn { background-color: #28a745; } /* Verde */
+.delete-btn { background-color: #dc3545; } /* Vermelho */
+
+.tool-description {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: -10px;
+    margin-bottom: 15px;
 }

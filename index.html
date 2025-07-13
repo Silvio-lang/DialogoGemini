@@ -8,6 +8,46 @@
 </head>
 <body>
 
+    <!-- Estrutura da Sidebar de Ferramentas -->
+    <div id="tools-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>Ferramentas</h2>
+            <button id="close-sidebar-btn" class="close-btn">×</button>
+        </div>
+
+<div class="sidebar-content">
+   <!-- Seção 1: Focada em acesso rápido e conveniência -->
+    <div class="tool-section">
+        <h3>Acesso Rápido (neste navegador)</h3>
+        <p class="tool-description">Salva um atalho da conversa na lista abaixo. Ideal para continuar rapidamente mais tarde, sem sair do app.</p>
+        <input type="text" id="conversation-name-input" placeholder="Dê um nome para o atalho...">
+        <button id="save-conversation-btn" class="sidebar-btn">Salvar na Lista</button>
+    </div>
+    
+    <hr>
+
+    <div class="tool-section">
+        <h3>Conversas de Acesso Rápido</h3>
+        <div id="saved-conversations-list">
+            <!-- A lista será preenchida aqui -->
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Seção 2: Focada em backup e portabilidade -->
+    <div class="tool-section">
+        <h3>Backup / Transferência (Arquivos)</h3>
+        <p class="tool-description">Use para salvar um arquivo no seu computador, mover para outro dispositivo ou guardar como um backup definitivo.</p>
+        <button id="import-conversation-btn" class="sidebar-btn">Importar de Arquivo (.json)</button>
+        <button id="export-conversation-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar Conversa Atual (.json)</button>
+    </div>
+    
+</div>
+
+    </div>
+
+    <!-- Modal da Chave de API -->
     <div id="api-key-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2>Chave da API do Google Gemini</h2>
@@ -17,9 +57,11 @@
         </div>
     </div>
 
+    <!-- Contêiner Principal do App -->
     <div id="app-container">
         <header>
             <h1>DiálogoGemini</h1>
+            <button id="open-sidebar-btn" class="tools-btn">⚙️</button>
         </header>
         
         <main>
@@ -45,6 +87,7 @@
         </footer>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="./script.js"></script>
 </body>
