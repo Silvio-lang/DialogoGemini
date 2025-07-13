@@ -29,14 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ================================================================
     // 2. VARIÁVEIS DE ESTADO
     // ================================================================
-    
-    // MUDANÇA 1: A estrutura de dados principal agora é um objeto
     let conversationHistory = { messages: [], systemPrompt: null };
-    
     let cachedChunks = [], currentChunkIndex = 0;
     let isTyping = false, typingSpeed = 180;
 
-    // ... (UI e outras funções auxiliares permanecem as mesmas)
     const ui = {
         showLoading: () => { if (elements.loadingIndicator) elements.loadingIndicator.classList.remove('hidden'); },
         hideLoading: () => { if (elements.loadingIndicator) elements.loadingIndicator.classList.add('hidden'); },
@@ -50,8 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ================================================================
     // 3. LÓGICA PRINCIPAL DO CHAT
     // ================================================================
-
-    // MUDANÇA 2: startNewChat agora reseta para o formato de objeto
     function startNewChat() {
         conversationHistory = { messages: [], systemPrompt: null };
         cachedChunks = []; currentChunkIndex = 0; isTyping = false;
@@ -71,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.hideContinueBtn(); 
         displayStaticMessage(userMessageText, 'user'); 
         
-        // MUDANÇA 3: Adiciona a mensagem do usuário no formato {role, content, timestamp}
         conversationHistory.messages.push({ 
             role: 'user', 
             content: userMessageText,
@@ -80,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         elements.userInput.value = ''; ui.lockInput(); ui.showLoading();
 
-        // MUDANÇA 4: Transforma o nosso histórico para o formato que a API espera
         const apiFormattedHistory = conversationHistory.messages.map(msg => ({
             role: msg.role,
             parts: [{ text: msg.content }]
@@ -89,14 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const apiKey = localStorage.getItem('geminiApiKey');
             const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            const requestBody = { contents: apiFormattedHistory }; // Envia o histórico formatado
+            const requestBody = { contents: apiFormattedHistory };
             const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             
             if (!response.ok) { const errorBody = await response.json(); throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`); }
             const data = await response.json();
             const fullResponseText = data.candidates[0].content.parts[0].text;
             
-            // MUDANÇA 5: Adiciona a resposta da IA no nosso formato interno
             conversationHistory.messages.push({ 
                 role: 'model', 
                 content: fullResponseText,
@@ -110,41 +101,157 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // ================================================================
-    // 4. FUNÇÕES DE DISPLAY E UI (Com pequenas adaptações)
+    // 4. FUNÇÕES DE DISPLAY E UI
     // ================================================================
-
-    // MUDANÇA 6: rebuildChatFromHistory agora lê de conversationHistory.messages
     function rebuildChatFromHistory() {
         elements.chatWindow.innerHTML = '';
         conversationHistory.messages.forEach(message => {
             const role = message.role === 'model' ? 'gemini' : 'user';
-            displayStaticMessage(message.content, role); // Usa message.content
+            displayStaticMessage(message.content, role);
         });
         elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
     }
 
-    // O resto das funções de display (displayStaticMessage, typewriter, displayChunks, etc.) não precisam de mudanças
-    // pois elas recebem o texto como um parâmetro simples.
-    // ...
-    function displayStaticMessage(text, role) { const messageElement = createMessageElement(role); messageElement.querySelector('p').innerHTML = marked.parse(text); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; }
-    function typewriter(element, text, onComplete) { isTyping = true; ui.lockInput(); const words = text.split(' '); let i = 0; element.innerHTML = ''; const interval = 300 - typingSpeed; const typingInterval = setInterval(() => { if (i < words.length) { element.innerHTML += words[i] + ' '; elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; i++; } else { clearInterval(typingInterval); isTyping = false; element.innerHTML = marked.parse(text); onComplete(); } }, interval); }
-    function displayChunks() { if (currentChunkIndex >= cachedChunks.length) { ui.unlockInput(); return; } const chunk = cachedChunks[currentChunkIndex]; const messageElement = createMessageElement('model'); typewriter(messageElement.querySelector('p'), chunk, () => { const CHARACTER_THRESHOLD = 150; const hasMoreChunks = currentChunkIndex < cachedChunks.length - 1; if (chunk.length < CHARACTER_THRESHOLD && hasMoreChunks) { setTimeout(() => { currentChunkIndex++; displayChunks(); }, 500); } else if (hasMoreChunks) { ui.showContinueBtn(); ui.unlockInput(); } else { ui.unlockInput(); } }); }
-    function createMessageElement(role) { const messageElement = document.createElement('div'); const senderClass = role === 'user' ? 'user-message' : 'gemini-message'; messageElement.classList.add('message', senderClass); const paragraph = document.createElement('p'); messageElement.appendChild(paragraph); elements.chatWindow.appendChild(messageElement); return messageElement; }
-    function runWelcomeTour() { /* ... (sem mudanças) ... */ const tourSteps = [ "👋 Olá! Bem-vindo ao DiálogoGemini! Aqui, o mais importante é que você tenha uma experiência de leitura confortável e controlada.", "Note como esta resposta está sendo 'digitada'. Você tem o poder de controlar essa velocidade! Use o slider 'Velocidade' ali embaixo 🔽 para deixar a leitura mais rápida ou mais lenta.", "Perfeito! Para respostas mais longas como esta, eu sempre vou pausar e te mostrar este botão 'Continuar'. Assim, você nunca será interrompido por uma 'parede de texto' correndo na tela.", "Pronto! Agora você domina os controles. Para tornar nossa conversa única, que tal começar me dando um nome e um papel?", "Um bom primeiro prompt nos ajuda a ter uma ótima conversa. Tente algo como:\n\n*'Olá! A partir de agora, seu nome será **Bia**. Aja como uma experiente chef de cozinha. Quero ideias para um jantar especial. Se entendeu, me cumprimente usando seu novo nome.'*\n\nDar um nome e um papel me ajuda a manter o foco. Mais tarde, você poderá salvar nossa conversa e o nome que você me deu ajudará a identificá-la. Ou, se preferir, pode simplesmente fazer sua primeira pergunta. Estou pronto!" ]; ui.lockInput(); elements.chatWindow.innerHTML = ''; (async function(){ for (let i = 0; i < tourSteps.length; i++) { const messageElement = createMessageElement('model'); await new Promise(resolve => typewriter(messageElement.querySelector('p'), tourSteps[i], resolve)); if (i < tourSteps.length - 1) { ui.showContinueBtn(); await new Promise(resolve => { const continueClickHandler = () => { elements.continueBtn.removeEventListener('click', continueClickHandler); ui.hideContinueBtn(); resolve(); }; addSafeEventListener(elements.continueBtn, 'click', continueClickHandler); }); } } localStorage.setItem('hasSeenTour', 'true'); ui.unlockInput(); })(); }
-    function handleContinue() { if (isTyping) return; ui.hideContinueBtn(); currentChunkIndex++; displayChunks(); }
+    function displayStaticMessage(text, role) { 
+        const messageElement = createMessageElement(role); 
+        messageElement.querySelector('p').innerHTML = marked.parse(text); 
+        elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; 
+    }
+
+    function typewriter(element, text, onComplete) { 
+        isTyping = true; ui.lockInput(); 
+        const words = text.split(' '); 
+        let i = 0; 
+        element.innerHTML = ''; 
+        const interval = 300 - typingSpeed; 
+        const typingInterval = setInterval(() => { 
+            if (i < words.length) { 
+                element.innerHTML += words[i] + ' '; 
+                elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; 
+                i++; 
+            } else { 
+                clearInterval(typingInterval); 
+                isTyping = false; 
+                element.innerHTML = marked.parse(text); 
+                onComplete(); 
+            } 
+        }, interval); 
+    }
+
+    function displayChunks() { 
+        if (currentChunkIndex >= cachedChunks.length) { ui.unlockInput(); return; } 
+        const chunk = cachedChunks[currentChunkIndex]; 
+        const messageElement = createMessageElement('model'); 
+        typewriter(messageElement.querySelector('p'), chunk, () => { 
+            const CHARACTER_THRESHOLD = 150; 
+            const hasMoreChunks = currentChunkIndex < cachedChunks.length - 1; 
+            if (chunk.length < CHARACTER_THRESHOLD && hasMoreChunks) { 
+                setTimeout(() => { 
+                    currentChunkIndex++; 
+                    displayChunks(); 
+                }, 500); 
+            } else if (hasMoreChunks) { 
+                ui.showContinueBtn(); 
+                ui.unlockInput(); 
+            } else { 
+                ui.unlockInput(); 
+            } 
+        }); 
+    }
+    
+    function createMessageElement(role) { 
+        const messageElement = document.createElement('div'); 
+        const senderClass = role === 'user' ? 'user-message' : 'gemini-message'; 
+        messageElement.classList.add('message', senderClass); 
+        const paragraph = document.createElement('p'); 
+        messageElement.appendChild(paragraph); 
+        elements.chatWindow.appendChild(messageElement); 
+        return messageElement; 
+    }
+
+    function runWelcomeTour() {
+        const tourSteps = [ "👋 Olá! Bem-vindo ao **DiálogoGemini!** Aqui, é importante que você tenha uma experiência de leitura confortável e mais humana. (clique Continuar)", "Perceba como esta resposta está sendo *apresentada gradualmente*. E você tem o poder de **controlar essa velocidade** usando o slider **Velocidade** ali abaixo deixando a escrita mais rápida ou mais lenta.", "Para respostas mais longas como esta, aparecerá o botão **Continuar**. Assim, você não será incomodado por aquela desagradável 'parede de texto' correndo para cima ⇧.", "Neste momento você também poderá mudar o rumo da conversa, digitando um novo prompt, e evitando conversa desnecessária."," É isso aí!  Agora que você já conhece o básico, vai uma dica: Para tornar nossa conversa melhor, é conveniente **me dar um nome e me designar um papel**.", "Um bom **primeiro prompt** ajuda a produzir uma conversa muito melhor. \n\n  Veja um modelo de primeiro prompt:\n\n\n  *'Olá! Meu nome é **Fulano** e partir de agora, seu nome será **Bia**. Aja como uma **experiente chef de cozinha**. Eu quero ideias para um jantar especial. Se entendeu, já me cumprimente usando seu novo nome.'*\n\n obs.: Dando a mim um nome e um papel, isto me ajudará a manter o foco.","Depois você poderá salvar nossa conversa incluindo o meu nome e o assunto. Isto ajudará a identificá-la para reativar e continuar no futuro. Assim, esta conversa poderá ir longe. E se preferir, também pode somente fazer sua primeira pergunta, anonimamente. Eu já estou pronto. Vamos lá?" ]; 
+        ui.lockInput(); 
+        elements.chatWindow.innerHTML = ''; 
+        (async function(){ 
+            for (let i = 0; i < tourSteps.length; i++) { 
+                const messageElement = createMessageElement('model'); 
+                await new Promise(resolve => typewriter(messageElement.querySelector('p'), tourSteps[i], resolve)); 
+                if (i < tourSteps.length - 1) { 
+                    ui.showContinueBtn(); 
+                    await new Promise(resolve => { 
+                        const continueClickHandler = () => { 
+                            elements.continueBtn.removeEventListener('click', continueClickHandler); 
+                            ui.hideContinueBtn(); 
+                            resolve(); 
+                        }; 
+                        addSafeEventListener(elements.continueBtn, 'click', continueClickHandler); 
+                    }); 
+                } 
+            } 
+            localStorage.setItem('hasSeenTour', 'true'); 
+            ui.unlockInput(); 
+        })(); 
+    }
+
+    function handleContinue() { 
+        if (isTyping) return; 
+        ui.hideContinueBtn(); 
+        currentChunkIndex++; 
+        displayChunks(); 
+    }
     
     // ================================================================
-    // 5. LÓGICA DE GERENCIAMENTO DE CONVERSAS (localStorage e Arquivos)
+    // 5. LÓGICA DE GERENCIAMENTO DE CONVERSAS
     // ================================================================
-    // Nenhuma mudança é necessária nas funções de save/load/render, pois elas já
-    // manipulam o conversationHistory como um todo, e agora ele já está no formato certo.
-    // ...
-    function saveConversation() { const name = elements.conversationNameInput.value.trim(); if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; savedConversations.push(newConversation); localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); alert(`Conversa "${name}" salva com sucesso!`); elements.conversationNameInput.value = ''; renderSavedConversations(); }
-    function loadConversation(timestamp) { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); if (conversationToLoad) { conversationHistory = conversationToLoad.history; rebuildChatFromHistory(); alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); elements.toolsSidebar.classList.remove('open'); } }
-    function deleteConversation(timestamp) { let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); renderSavedConversations(); } }
-    function renderSavedConversations() { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; elements.savedConversationsList.innerHTML = ''; if (savedConversations.length === 0) { elements.savedConversationsList.innerHTML = '<p style="padding: 10px; text-align: center; color: #6c757d;">Nenhuma conversa salva.</p>'; return; } savedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); savedConversations.forEach(conv => { const date = new Date(conv.timestamp); const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`; const item = document.createElement('div'); item.className = 'saved-conversation-item'; item.innerHTML = `<div class="conversation-info"><span class="name">${conv.name}</span><span class="timestamp">${formattedDate}</span></div><div class="conversation-actions"><button class="load-btn" data-timestamp="${conv.timestamp}">Carregar</button><button class="delete-btn" data-timestamp="${conv.timestamp}">Excluir</button></div>`; elements.savedConversationsList.appendChild(item); }); }
+    function saveConversation() { 
+        const name = elements.conversationNameInput.value.trim(); 
+        if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } 
+        if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } 
+        const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
+        const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; 
+        savedConversations.push(newConversation); 
+        localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); 
+        alert(`Conversa "${name}" salva com sucesso!`); 
+        elements.conversationNameInput.value = ''; 
+        renderSavedConversations(); 
+    }
+    function loadConversation(timestamp) { 
+        const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
+        const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); 
+        if (conversationToLoad) { 
+            conversationHistory = conversationToLoad.history; 
+            rebuildChatFromHistory(); 
+            alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); 
+            elements.toolsSidebar.classList.remove('open'); 
+        } 
+    }
+    function deleteConversation(timestamp) { 
+        let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
+        const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; 
+        if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { 
+            const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); 
+            localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); 
+            renderSavedConversations(); 
+        } 
+    }
+    function renderSavedConversations() { 
+        const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
+        elements.savedConversationsList.innerHTML = ''; 
+        if (savedConversations.length === 0) { 
+            elements.savedConversationsList.innerHTML = '<p style="padding: 10px; text-align: center; color: #6c757d;">Nenhuma conversa salva.</p>'; return; 
+        } 
+        savedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); 
+        savedConversations.forEach(conv => { 
+            const date = new Date(conv.timestamp); 
+            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`; 
+            const item = document.createElement('div'); 
+            item.className = 'saved-conversation-item'; 
+            item.innerHTML = `<div class="conversation-info"><span class="name">${conv.name}</span><span class="timestamp">${formattedDate}</span></div><div class="conversation-actions"><button class="load-btn" data-timestamp="${conv.timestamp}">Carregar</button><button class="delete-btn" data-timestamp="${conv.timestamp}">Excluir</button></div>`; 
+            elements.savedConversationsList.appendChild(item); 
+        }); 
+    }
 
-    // MUDANÇA 7: A função de exportar agora já lida com o formato correto nativamente.
     function exportConversationToFile() {
         if (conversationHistory.messages.length === 0) {
             alert("A conversa está vazia. Não há nada para exportar.");
@@ -154,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filename = window.prompt("Digite o nome do arquivo para a exportação:", defaultName);
         if (filename === null || filename.trim() === "") { return; }
         const finalFilename = filename.endsWith('.json') ? filename : `${filename}.json`;
-        const jsonString = JSON.stringify(conversationHistory, null, 2); // Exporta o objeto inteiro
+        const jsonString = JSON.stringify(conversationHistory, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -166,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     }
 
-    // MUDANÇA 8: A validação na importação agora checa pela nova estrutura.
     function importConversationFromFile() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -178,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.onload = (e) => {
                 try {
                     const importedObject = JSON.parse(e.target.result);
-                    // Validação robusta para o formato { messages: [...] }
                     if (typeof importedObject !== 'object' || importedObject === null || !Array.isArray(importedObject.messages)) {
                         throw new Error("O arquivo não parece ser um histórico de conversa válido. Estrutura principal não encontrada.");
                     }
@@ -197,11 +302,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // ================================================================
-    // 6. INICIALIZAÇÃO E EVENT LISTENERS (sem mudanças aqui)
+    // 6. INICIALIZAÇÃO E EVENT LISTENERS
     // ================================================================
-    function saveApiKey() { const apiKey = elements.apiKeyInput.value.trim(); if (apiKey) { localStorage.setItem('geminiApiKey', apiKey); elements.apiKeyModal.classList.add('hidden'); startNewChat(); } else { alert("Por favor, insira uma chave de API válida."); } }
-    function setupSpeedControl() { if (!elements.speedSlider) return; const savedSpeed = localStorage.getItem('typingSpeed'); if (savedSpeed) { typingSpeed = parseInt(savedSpeed, 10); elements.speedSlider.value = savedSpeed; } addSafeEventListener(elements.speedSlider, 'input', (e) => { typingSpeed = parseInt(e.target.value, 10); localStorage.setItem('typingSpeed', typingSpeed); }); }
-    function checkApiKey() { if (localStorage.getItem('geminiApiKey')) { startNewChat(); } else { if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); } }
+    function saveApiKey() { 
+        const apiKey = elements.apiKeyInput.value.trim(); 
+        if (apiKey) { 
+            localStorage.setItem('geminiApiKey', apiKey); 
+            elements.apiKeyModal.classList.add('hidden'); 
+            startNewChat(); 
+        } else { 
+            alert("Por favor, insira uma chave de API válida."); 
+        } 
+    }
+    function setupSpeedControl() { 
+        if (!elements.speedSlider) return; 
+        const savedSpeed = localStorage.getItem('typingSpeed'); 
+        if (savedSpeed) { 
+            typingSpeed = parseInt(savedSpeed, 10); 
+            elements.speedSlider.value = savedSpeed; 
+        } 
+        addSafeEventListener(elements.speedSlider, 'input', (e) => { 
+            typingSpeed = parseInt(e.target.value, 10); 
+            localStorage.setItem('typingSpeed', typingSpeed); 
+        }); 
+    }
+    function checkApiKey() { 
+        if (localStorage.getItem('geminiApiKey')) { 
+            startNewChat(); 
+        } else { 
+            if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); 
+        } 
+    }
 
     addSafeEventListener(elements.sendButton, 'click', handleNewPrompt);
     addSafeEventListener(elements.userInput, 'keypress', (event) => { if (event.key === 'Enter') handleNewPrompt(); });
