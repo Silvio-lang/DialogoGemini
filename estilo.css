@@ -323,11 +323,11 @@ footer {
 /* --- Estrutura Principal da Sidebar (Gaveta) --- */
 .sidebar {
     height: 100%;
-    width: 300px;
+    width: 400px;
     max-width: 85%; /* Garante que no celular não ocupe a tela toda */
     position: fixed; /* Fica por cima de todo o conteúdo */
     top: 0;
-    right: -320px; /* Começa escondida 320px para a direita, fora da tela */
+    right: -420px; /* Começa escondida 420px para a direita, fora da tela */
     background-color: #f8f9fa; /* Um cinza bem claro */
     box-shadow: -2px 0 8px rgba(0,0,0,0.15); /* Sombra para dar profundidade */
     z-index: 1001; /* Z-index mais alto que o modal para ficar na frente de tudo */
@@ -470,7 +470,7 @@ hr {
 .conversation-info .timestamp {
     display: block;
     font-size: 0.75em;
-    color: #6c757d;
+    color: rgb(0,0,175);  // color: #6c757d; 
 }
 
 /* --- Botões de Ação (Carregar, Excluir) --- */
@@ -502,4 +502,98 @@ hr {
     color: #6c757d;
     margin-top: -10px;
     margin-bottom: 15px;
+}
+
+/* ================================================================ */
+/* ESTILOS DO SYSTEM PROMPT                                         */
+/* ================================================================ */
+
+#system-prompt-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;   /* Garante que padding não afete a largura total */
+    font-family: inherit;     /* Usa a mesma fonte do resto do app */
+    font-size: 0.9em;
+    line-height: 1.4;
+    resize: vertical;         /* Permite que o usuário redimensione apenas na vertical */
+    min-height: 80px;         /* Uma altura mínima inicial confortável */
+}
+
+/* Estilo para links dentro da sidebar */
+.sidebar-link {
+    display: block;
+    padding: 8px 0;
+    color: #007bff;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+.sidebar-link:hover {
+    text-decoration: underline;
+}
+
+/* ================================================================ */
+/* ESTILOS DO RODAPÉ E MEDIDOR DE CONTEXTO                          */
+/* ================================================================ */
+
+/* Contêiner que engloba os controles e o medidor */
+#controls-footer {
+    display: flex;
+    justify-content: space-between; /* Alinha os itens nas extremidades */
+    align-items: center;
+    margin-top: 15px; /* Espaço acima dos controles */
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas pequenas */
+    gap: 10px; /* Espaço entre os itens se eles quebrarem a linha */
+}
+
+/* Os controles que já tínhamos (links, slider) */
+#controls {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espaço entre cada controle */
+    flex-wrap: wrap;
+}
+
+/* Contêiner do nosso novo medidor de contexto */
+#context-meter-container {
+    font-size: 0.8em;
+    color: #6c757d; /* Cinza, para ser informativo mas não distrativo */
+    text-align: right;
+    flex-shrink: 0; /* Impede que ele encolha */
+}
+
+/* ================================================================ */
+/* ESTILOS DA LIXEIRA DE MENSAGEM                                   */
+/* ================================================================ */
+
+/* Posicionamento relativo no contêiner da mensagem */
+.message {
+    position: relative;
+    padding-right: 35px; /* Adiciona espaço à direita para a lixeira não sobrepor o texto */
+}
+
+/* Estilo do botão da lixeira */
+.delete-message-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 1.1em; /* Tamanho do ícone */
+    color: #999;
+    cursor: pointer;
+    opacity: 0; /* Começa invisível */
+    transition: opacity 0.2s, color 0.2s;
+    padding: 4px;
+    line-height: 1;
+}
+
+/* A lixeira aparece quando o mouse passa sobre a mensagem */
+.message:hover .delete-message-btn {
+    opacity: 1;
+}
+
+.delete-message-btn:hover {
+    color: #dc3545; /* Vermelho ao passar o mouse sobre a lixeira */
 }

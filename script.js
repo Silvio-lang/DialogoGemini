@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. SELEÇÃO DE ELEMENTOS
     // ================================================================
     const elements = {
+        systemPromptInput: document.getElementById('system-prompt-input'),
+        contextMeter: document.getElementById('context-meter'),
         sendButton: document.getElementById('send-btn'),
         userInput: document.getElementById('user-input'),
         chatWindow: document.getElementById('chat-window'),
@@ -23,9 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
         saveConversationBtn: document.getElementById('save-conversation-btn'),
         savedConversationsList: document.getElementById('saved-conversations-list'),
         importConversationBtn: document.getElementById('import-conversation-btn'),
-        exportConversationBtn: document.getElementById('export-conversation-btn')
+        exportJsonBtn: document.getElementById('export-json-btn'),
+        exportMdBtn: document.getElementById('export-md-btn'), // <<-- CORREÇÃO: Vírgula que faltava foi adicionada na versão anterior
     };
 
+    // ... (O resto do arquivo é o mesmo que a última versão funcional)
+    
     // ================================================================
     // 2. VARIÁVEIS DE ESTADO
     // ================================================================
@@ -42,298 +47,31 @@ document.addEventListener('DOMContentLoaded', () => {
         unlockInput: () => { if (elements.userInput) elements.userInput.disabled = false; if (elements.sendButton) elements.sendButton.disabled = false; if (elements.userInput) elements.userInput.focus(); }
     };
     function addSafeEventListener(element, event, handler) { if (element) { element.addEventListener(event, handler); } }
-
-    // ================================================================
-    // 3. LÓGICA PRINCIPAL DO CHAT
-    // ================================================================
-    function startNewChat() {
-        conversationHistory = { messages: [], systemPrompt: null };
-        cachedChunks = []; currentChunkIndex = 0; isTyping = false;
-        ui.hideContinueBtn();
-        if (!localStorage.getItem('hasSeenTour')) {
-            runWelcomeTour();
-        } else {
-            elements.chatWindow.innerHTML = '';
-            displayStaticMessage('Olá! Como posso ajudar hoje?', 'model');
-            ui.unlockInput();
-        }
-    }
-
-    async function handleNewPrompt() {
-        const userMessageText = elements.userInput.value.trim();
-        if (!userMessageText || isTyping) return;
-        ui.hideContinueBtn(); 
-        displayStaticMessage(userMessageText, 'user'); 
-        
-        conversationHistory.messages.push({ 
-            role: 'user', 
-            content: userMessageText,
-            timestamp: new Date().toISOString()
-        });
-        
-        elements.userInput.value = ''; ui.lockInput(); ui.showLoading();
-
-        const apiFormattedHistory = conversationHistory.messages.map(msg => ({
-            role: msg.role,
-            parts: [{ text: msg.content }]
-        }));
-
-        try {
-            const apiKey = localStorage.getItem('geminiApiKey');
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            const requestBody = { contents: apiFormattedHistory };
-            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
-            
-            if (!response.ok) { const errorBody = await response.json(); throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`); }
-            const data = await response.json();
-            const fullResponseText = data.candidates[0].content.parts[0].text;
-            
-            conversationHistory.messages.push({ 
-                role: 'model', 
-                content: fullResponseText,
-                timestamp: new Date().toISOString()
-            });
-
-            cachedChunks = fullResponseText.split(/\n{2,}/g).filter(chunk => chunk.trim() !== '');
-            currentChunkIndex = 0; ui.hideLoading();
-            if (cachedChunks.length > 0) { displayChunks(); } else { ui.unlockInput(); }
-        } catch (error) { console.error("Erro detalhado:", error); displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model'); ui.hideLoading(); ui.unlockInput(); }
-    }
     
-    // ================================================================
-    // 4. FUNÇÕES DE DISPLAY E UI
-    // ================================================================
-    function rebuildChatFromHistory() {
-        elements.chatWindow.innerHTML = '';
-        conversationHistory.messages.forEach(message => {
-            const role = message.role === 'model' ? 'gemini' : 'user';
-            displayStaticMessage(message.content, role);
-        });
-        elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
-    }
-
-    function displayStaticMessage(text, role) { 
-        const messageElement = createMessageElement(role); 
-        messageElement.querySelector('p').innerHTML = marked.parse(text); 
-        elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; 
-    }
-
-    function typewriter(element, text, onComplete) { 
-        isTyping = true; ui.lockInput(); 
-        const words = text.split(' '); 
-        let i = 0; 
-        element.innerHTML = ''; 
-        const interval = 300 - typingSpeed; 
-        const typingInterval = setInterval(() => { 
-            if (i < words.length) { 
-                element.innerHTML += words[i] + ' '; 
-                elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; 
-                i++; 
-            } else { 
-                clearInterval(typingInterval); 
-                isTyping = false; 
-                element.innerHTML = marked.parse(text); 
-                onComplete(); 
-            } 
-        }, interval); 
-    }
-
-    function displayChunks() { 
-        if (currentChunkIndex >= cachedChunks.length) { ui.unlockInput(); return; } 
-        const chunk = cachedChunks[currentChunkIndex]; 
-        const messageElement = createMessageElement('model'); 
-        typewriter(messageElement.querySelector('p'), chunk, () => { 
-            const CHARACTER_THRESHOLD = 150; 
-            const hasMoreChunks = currentChunkIndex < cachedChunks.length - 1; 
-            if (chunk.length < CHARACTER_THRESHOLD && hasMoreChunks) { 
-                setTimeout(() => { 
-                    currentChunkIndex++; 
-                    displayChunks(); 
-                }, 500); 
-            } else if (hasMoreChunks) { 
-                ui.showContinueBtn(); 
-                ui.unlockInput(); 
-            } else { 
-                ui.unlockInput(); 
-            } 
-        }); 
-    }
+    function setupSystemPrompt() { const savedSystemPrompt = localStorage.getItem('systemPrompt'); if (savedSystemPrompt) { elements.systemPromptInput.value = savedSystemPrompt; conversationHistory.systemPrompt = savedSystemPrompt; } addSafeEventListener(elements.systemPromptInput, 'input', () => { const currentPrompt = elements.systemPromptInput.value; localStorage.setItem('systemPrompt', currentPrompt); conversationHistory.systemPrompt = currentPrompt; }); }
+    function startNewChat() { conversationHistory.messages = []; const globalSystemPrompt = localStorage.getItem('systemPrompt') || ''; conversationHistory.systemPrompt = globalSystemPrompt; elements.systemPromptInput.value = globalSystemPrompt; cachedChunks = []; currentChunkIndex = 0; isTyping = false; ui.hideContinueBtn(); if (!localStorage.getItem('hasSeenTour')) { runWelcomeTour(); } else { elements.chatWindow.innerHTML = ''; displayStaticMessage('Olá! Como posso ajudar hoje?', 'model'); ui.unlockInput(); } updateContextMeter(); }
+    async function handleNewPrompt() { const userMessageText = elements.userInput.value.trim(); if (!userMessageText || isTyping) return; ui.hideContinueBtn(); const userMessage = { role: 'user', content: userMessageText, timestamp: new Date().toISOString() }; conversationHistory.messages.push(userMessage); displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp); updateContextMeter(); elements.userInput.value = ''; ui.lockInput(); ui.showLoading(); const apiFormattedHistory = conversationHistory.messages.map(msg => ({ role: msg.role, parts: [{ text: msg.content }] })); try { const apiKey = localStorage.getItem('geminiApiKey'); const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`; const requestBody = { contents: apiFormattedHistory }; if (conversationHistory.systemPrompt) { requestBody.systemInstruction = { parts: [{ text: conversationHistory.systemPrompt }] }; } const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) }); if (!response.ok) { const errorBody = await response.json(); throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`); } const data = await response.json(); const fullResponseText = data.candidates[0].content.parts[0].text; const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() }; conversationHistory.messages.push(modelMessage); updateContextMeter(); cachedChunks = fullResponseText.split(/\n{2,}/g).filter(chunk => chunk.trim() !== ''); currentChunkIndex = 0; ui.hideLoading(); if (cachedChunks.length > 0) { displayChunks(); } else { ui.unlockInput(); } } catch (error) { console.error("Erro detalhado:", error); displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model', new Date().toISOString()); ui.hideLoading(); ui.unlockInput(); } }
+    function rebuildChatFromHistory() { elements.chatWindow.innerHTML = ''; conversationHistory.messages.forEach(message => { const role = message.role === 'model' ? 'gemini' : 'user'; displayStaticMessage(message.content, role, message.timestamp); }); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; updateContextMeter(); }
+    function displayStaticMessage(text, role, timestamp) { const messageElement = createMessageElement(role, timestamp); messageElement.querySelector('p').innerHTML = marked.parse(text); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; }
+    function createMessageElement(role, timestamp) { const messageElement = document.createElement('div'); const senderClass = role === 'user' ? 'user-message' : 'gemini-message'; messageElement.classList.add('message', senderClass); messageElement.dataset.timestamp = timestamp; const paragraph = document.createElement('p'); messageElement.appendChild(paragraph); if (timestamp) { const deleteBtn = document.createElement('button'); deleteBtn.className = 'delete-message-btn'; deleteBtn.innerHTML = '🗑️'; deleteBtn.dataset.timestamp = timestamp; deleteBtn.title = 'Excluir Mensagem'; messageElement.appendChild(deleteBtn); const timestampEl = document.createElement('div'); timestampEl.className = 'message-timestamp'; const date = new Date(timestamp); const formattedDateTime = date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); timestampEl.textContent = formattedDateTime; messageElement.appendChild(timestampEl); } elements.chatWindow.appendChild(messageElement); return messageElement; }
+    function typewriter(element, text, onComplete) { isTyping = true; ui.lockInput(); const words = text.split(' '); let i = 0; element.innerHTML = ''; const interval = 300 - typingSpeed; const typingInterval = setInterval(() => { if (i < words.length) { element.innerHTML += words[i] + ' '; elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; i++; } else { clearInterval(typingInterval); isTyping = false; element.innerHTML = marked.parse(text); onComplete(); } }, interval); }
+    function displayChunks() { if (currentChunkIndex >= cachedChunks.length) { ui.unlockInput(); return; } const chunk = cachedChunks[currentChunkIndex]; const timestamp = conversationHistory.messages[conversationHistory.messages.length - 1].timestamp; const messageElement = createMessageElement('model', timestamp); typewriter(messageElement.querySelector('p'), chunk, () => { const CHARACTER_THRESHOLD = 150; const hasMoreChunks = currentChunkIndex < cachedChunks.length - 1; if (chunk.length < CHARACTER_THRESHOLD && hasMoreChunks) { setTimeout(() => { currentChunkIndex++; displayChunks(); }, 500); } else if (hasMoreChunks) { ui.showContinueBtn(); ui.unlockInput(); } else { ui.unlockInput(); } }); }
+    function runWelcomeTour() { const tourSteps = [ "👋 Olá! Bem-vindo ao **DiálogoGemini!** Aqui, é importante que você tenha uma experiência de leitura confortável e mais humana. (clique Continuar)", "Perceba como esta resposta está sendo *apresentada gradualmente*. E você tem o poder de **controlar essa velocidade** usando o slider **Velocidade** ali abaixo deixando a escrita mais rápida ou mais lenta.", "Para respostas mais longas como esta, aparecerá o botão **Continuar**. Assim, você não será incomodado por aquela desagradável 'parede de texto' correndo para cima ⇧.", "Neste momento você também poderá mudar o rumo da conversa, digitando um novo prompt, e evitando conversa desnecessária."," É isso aí!  Agora que você já conhece o básico, vai uma dica: Para tornar nossa conversa melhor, é conveniente **me dar um nome e me designar um papel**.", "Um bom **primeiro prompt** ajuda a produzir uma conversa muito melhor. \n\n  Veja um modelo de primeiro prompt:\n\n\n  *'Olá! Meu nome é **Fulano** e partir de agora, seu nome será **Bia**. Aja como uma **experiente chef de cozinha**. Eu quero ideias para um jantar especial. Se entendeu, já me cumprimente usando seu novo nome.'*\n\n obs.: Dando a mim um nome e um papel, isto me ajudará a manter o foco.","Depois você poderá salvar nossa conversa incluindo o meu nome e o assunto. Isto ajudará a identificá-la para reativar e continuar no futuro. Assim, esta conversa poderá ir longe. E se preferir, também pode somente fazer sua primeira pergunta, anonimamente. Eu já estou pronto. Vamos lá?" ]; ui.lockInput(); elements.chatWindow.innerHTML = ''; (async function(){ for (let i = -1; i < tourSteps.length; i++) { const messageElement = createMessageElement('model'); await new Promise(resolve => typewriter(messageElement.querySelector('p'), tourSteps[i], resolve)); if (i < tourSteps.length - 1) { ui.showContinueBtn(); await new Promise(resolve => { const continueClickHandler = () => { elements.continueBtn.removeEventListener('click', continueClickHandler); ui.hideContinueBtn(); resolve(); }; addSafeEventListener(elements.continueBtn, 'click', continueClickHandler); }); } } localStorage.setItem('hasSeenTour', 'true'); ui.unlockInput(); })(); }
+    function handleContinue() { if (isTyping) return; ui.hideContinueBtn(); currentChunkIndex++; displayChunks(); }
+    function handleDeleteMessage(timestamp) { if (confirm("Tem certeza de que deseja apagar esta mensagem permanentemente?")) { conversationHistory.messages = conversationHistory.messages.filter(msg => msg.timestamp !== timestamp); const messageElement = document.querySelector(`.message[data-timestamp="${timestamp}"]`); if (messageElement) { messageElement.remove(); } updateContextMeter(); } }
+    function updateContextMeter() { if (!elements.contextMeter) return; const totalChars = conversationHistory.messages.reduce((sum, message) => { return sum + (message.content ? message.content.length : 0); }, 0); const approximateTokens = Math.round(totalChars / 4); elements.contextMeter.textContent = `Contexto: ~${approximateTokens.toLocaleString('pt-BR')} tokens`; }
+    function saveConversation() { const name = elements.conversationNameInput.value.trim(); if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; savedConversations.push(newConversation); localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); alert(`Conversa "${name}" salva com sucesso!`); elements.conversationNameInput.value = ''; renderSavedConversations(); }
+    function loadConversation(timestamp) { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); if (conversationToLoad) { conversationHistory = conversationToLoad.history; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); elements.toolsSidebar.classList.remove('open'); } }
+    function deleteConversation(timestamp) { let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); renderSavedConversations(); } }
+    function renderSavedConversations() { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; elements.savedConversationsList.innerHTML = ''; if (savedConversations.length === 0) { elements.savedConversationsList.innerHTML = '<p style="padding: 10px; text-align: center; color: #6c757d;">Nenhuma conversa salva.</p>'; return; } savedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); savedConversations.forEach(conv => { const date = new Date(conv.timestamp); const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`; const item = document.createElement('div'); item.className = 'saved-conversation-item'; item.innerHTML = `<div class="conversation-info"><span class="name">${conv.name}</span><span class="timestamp">${formattedDate}</span></div><div class="conversation-actions"><button class="load-btn" data-timestamp="${conv.timestamp}">Carregar</button><button class="delete-btn" data-timestamp="${conv.timestamp}">Excluir</button></div>`; elements.savedConversationsList.appendChild(item); }); }
+    function exportConversationToJson() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo para o backup (.json):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.json') ? filename : `${filename}.json`; const jsonString = JSON.stringify(conversationHistory, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
+    function exportConversationToMarkdown() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } let markdownContent = `# DiálogoGemini - Conversa\n\n`; if (conversationHistory.systemPrompt) { markdownContent += `## Instrução do Assistente (Persona)\n\n`; markdownContent += `> ${conversationHistory.systemPrompt}\n\n`; markdownContent += `---\n\n`; } conversationHistory.messages.forEach(message => { const role = message.role === 'user' ? 'Usuário' : 'Assistente'; const date = new Date(message.timestamp); const formattedDateTime = date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); markdownContent += `**${role}** (*${formattedDateTime}*):\n\n`; markdownContent += `${message.content}\n\n`; markdownContent += `---\n\n`; }); const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo de leitura (.md):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.md') ? filename : `${filename}.md`; const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
+    function importConversationFromFile() { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json'; input.onchange = (event) => { const file = event.target.files[0]; if (!file) { return; } const reader = new FileReader(); reader.onload = (e) => { try { const importedObject = JSON.parse(e.target.result); if (typeof importedObject !== 'object' || importedObject === null || !Array.isArray(importedObject.messages)) { throw new Error("O arquivo não parece ser um histórico de conversa válido. Estrutura principal não encontrada."); } conversationHistory = importedObject; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert("Conversa importada com sucesso!"); elements.toolsSidebar.classList.remove('open'); } catch (error) { console.error("Erro ao importar o arquivo:", error); alert(`Ocorreu um erro ao ler o arquivo: ${error.message}`); } }; reader.readAsText(file); }; input.click(); }
+    function saveApiKey() { const apiKey = elements.apiKeyInput.value.trim(); if (apiKey) { localStorage.setItem('geminiApiKey', apiKey); elements.apiKeyModal.classList.add('hidden'); startNewChat(); } else { alert("Por favor, insira uma chave de API válida."); } }
+    function setupSpeedControl() { if (!elements.speedSlider) return; const savedSpeed = localStorage.getItem('typingSpeed'); if (savedSpeed) { typingSpeed = parseInt(savedSpeed, 10); elements.speedSlider.value = savedSpeed; } addSafeEventListener(elements.speedSlider, 'input', (e) => { typingSpeed = parseInt(e.target.value, 10); localStorage.setItem('typingSpeed', typingSpeed); }); }
+    function checkApiKey() { if (localStorage.getItem('geminiApiKey')) { startNewChat(); } else { if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); } }
     
-    function createMessageElement(role) { 
-        const messageElement = document.createElement('div'); 
-        const senderClass = role === 'user' ? 'user-message' : 'gemini-message'; 
-        messageElement.classList.add('message', senderClass); 
-        const paragraph = document.createElement('p'); 
-        messageElement.appendChild(paragraph); 
-        elements.chatWindow.appendChild(messageElement); 
-        return messageElement; 
-    }
-
-    function runWelcomeTour() {
-        const tourSteps = [ "👋 Olá! Bem-vindo ao **DiálogoGemini!** Aqui, é importante que você tenha uma experiência de leitura confortável e mais humana. (clique Continuar)", "Perceba como esta resposta está sendo *apresentada gradualmente*. E você tem o poder de **controlar essa velocidade** usando o slider **Velocidade** ali abaixo deixando a escrita mais rápida ou mais lenta.", "Para respostas mais longas como esta, aparecerá o botão **Continuar**. Assim, você não será incomodado por aquela desagradável 'parede de texto' correndo para cima ⇧.", "Neste momento você também poderá mudar o rumo da conversa, digitando um novo prompt, e evitando conversa desnecessária."," É isso aí!  Agora que você já conhece o básico, vai uma dica: Para tornar nossa conversa melhor, é conveniente **me dar um nome e me designar um papel**.", "Um bom **primeiro prompt** ajuda a produzir uma conversa muito melhor. \n\n  Veja um modelo de primeiro prompt:\n\n\n  *'Olá! Meu nome é **Fulano** e partir de agora, seu nome será **Bia**. Aja como uma **experiente chef de cozinha**. Eu quero ideias para um jantar especial. Se entendeu, já me cumprimente usando seu novo nome.'*\n\n obs.: Dando a mim um nome e um papel, isto me ajudará a manter o foco.","Depois você poderá salvar nossa conversa incluindo o meu nome e o assunto. Isto ajudará a identificá-la para reativar e continuar no futuro. Assim, esta conversa poderá ir longe. E se preferir, também pode somente fazer sua primeira pergunta, anonimamente. Eu já estou pronto. Vamos lá?" ]; 
-        ui.lockInput(); 
-        elements.chatWindow.innerHTML = ''; 
-        (async function(){ 
-            for (let i = 0; i < tourSteps.length; i++) { 
-                const messageElement = createMessageElement('model'); 
-                await new Promise(resolve => typewriter(messageElement.querySelector('p'), tourSteps[i], resolve)); 
-                if (i < tourSteps.length - 1) { 
-                    ui.showContinueBtn(); 
-                    await new Promise(resolve => { 
-                        const continueClickHandler = () => { 
-                            elements.continueBtn.removeEventListener('click', continueClickHandler); 
-                            ui.hideContinueBtn(); 
-                            resolve(); 
-                        }; 
-                        addSafeEventListener(elements.continueBtn, 'click', continueClickHandler); 
-                    }); 
-                } 
-            } 
-            localStorage.setItem('hasSeenTour', 'true'); 
-            ui.unlockInput(); 
-        })(); 
-    }
-
-    function handleContinue() { 
-        if (isTyping) return; 
-        ui.hideContinueBtn(); 
-        currentChunkIndex++; 
-        displayChunks(); 
-    }
-    
-    // ================================================================
-    // 5. LÓGICA DE GERENCIAMENTO DE CONVERSAS
-    // ================================================================
-    function saveConversation() { 
-        const name = elements.conversationNameInput.value.trim(); 
-        if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } 
-        if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } 
-        const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
-        const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; 
-        savedConversations.push(newConversation); 
-        localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); 
-        alert(`Conversa "${name}" salva com sucesso!`); 
-        elements.conversationNameInput.value = ''; 
-        renderSavedConversations(); 
-    }
-    function loadConversation(timestamp) { 
-        const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
-        const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); 
-        if (conversationToLoad) { 
-            conversationHistory = conversationToLoad.history; 
-            rebuildChatFromHistory(); 
-            alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); 
-            elements.toolsSidebar.classList.remove('open'); 
-        } 
-    }
-    function deleteConversation(timestamp) { 
-        let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
-        const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; 
-        if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { 
-            const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); 
-            localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); 
-            renderSavedConversations(); 
-        } 
-    }
-    function renderSavedConversations() { 
-        const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; 
-        elements.savedConversationsList.innerHTML = ''; 
-        if (savedConversations.length === 0) { 
-            elements.savedConversationsList.innerHTML = '<p style="padding: 10px; text-align: center; color: #6c757d;">Nenhuma conversa salva.</p>'; return; 
-        } 
-        savedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); 
-        savedConversations.forEach(conv => { 
-            const date = new Date(conv.timestamp); 
-            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`; 
-            const item = document.createElement('div'); 
-            item.className = 'saved-conversation-item'; 
-            item.innerHTML = `<div class="conversation-info"><span class="name">${conv.name}</span><span class="timestamp">${formattedDate}</span></div><div class="conversation-actions"><button class="load-btn" data-timestamp="${conv.timestamp}">Carregar</button><button class="delete-btn" data-timestamp="${conv.timestamp}">Excluir</button></div>`; 
-            elements.savedConversationsList.appendChild(item); 
-        }); 
-    }
-
-    function exportConversationToFile() {
-        if (conversationHistory.messages.length === 0) {
-            alert("A conversa está vazia. Não há nada para exportar.");
-            return;
-        }
-        const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`;
-        const filename = window.prompt("Digite o nome do arquivo para a exportação:", defaultName);
-        if (filename === null || filename.trim() === "") { return; }
-        const finalFilename = filename.endsWith('.json') ? filename : `${filename}.json`;
-        const jsonString = JSON.stringify(conversationHistory, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = finalFilename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    function importConversationFromFile() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (event) => {
-            const file = event.target.files[0];
-            if (!file) { return; }
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedObject = JSON.parse(e.target.result);
-                    if (typeof importedObject !== 'object' || importedObject === null || !Array.isArray(importedObject.messages)) {
-                        throw new Error("O arquivo não parece ser um histórico de conversa válido. Estrutura principal não encontrada.");
-                    }
-                    conversationHistory = importedObject;
-                    rebuildChatFromHistory();
-                    alert("Conversa importada com sucesso!");
-                    elements.toolsSidebar.classList.remove('open');
-                } catch (error) {
-                    console.error("Erro ao importar o arquivo:", error);
-                    alert(`Ocorreu um erro ao ler o arquivo: ${error.message}`);
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
-    }
-    
-    // ================================================================
-    // 6. INICIALIZAÇÃO E EVENT LISTENERS
-    // ================================================================
-    function saveApiKey() { 
-        const apiKey = elements.apiKeyInput.value.trim(); 
-        if (apiKey) { 
-            localStorage.setItem('geminiApiKey', apiKey); 
-            elements.apiKeyModal.classList.add('hidden'); 
-            startNewChat(); 
-        } else { 
-            alert("Por favor, insira uma chave de API válida."); 
-        } 
-    }
-    function setupSpeedControl() { 
-        if (!elements.speedSlider) return; 
-        const savedSpeed = localStorage.getItem('typingSpeed'); 
-        if (savedSpeed) { 
-            typingSpeed = parseInt(savedSpeed, 10); 
-            elements.speedSlider.value = savedSpeed; 
-        } 
-        addSafeEventListener(elements.speedSlider, 'input', (e) => { 
-            typingSpeed = parseInt(e.target.value, 10); 
-            localStorage.setItem('typingSpeed', typingSpeed); 
-        }); 
-    }
-    function checkApiKey() { 
-        if (localStorage.getItem('geminiApiKey')) { 
-            startNewChat(); 
-        } else { 
-            if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); 
-        } 
-    }
-
+    addSafeEventListener(elements.chatWindow, 'click', (event) => { const target = event.target.closest('.delete-message-btn'); if (target) { const timestamp = target.dataset.timestamp; handleDeleteMessage(timestamp); } });
     addSafeEventListener(elements.sendButton, 'click', handleNewPrompt);
     addSafeEventListener(elements.userInput, 'keypress', (event) => { if (event.key === 'Enter') handleNewPrompt(); });
     addSafeEventListener(elements.saveApiKeyBtn, 'click', saveApiKey);
@@ -346,8 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
     addSafeEventListener(elements.saveConversationBtn, 'click', saveConversation);
     addSafeEventListener(elements.savedConversationsList, 'click', (event) => { const target = event.target; const timestamp = target.getAttribute('data-timestamp'); if (!timestamp) return; if (target.classList.contains('load-btn')) { loadConversation(timestamp); } else if (target.classList.contains('delete-btn')) { deleteConversation(timestamp); } });
     addSafeEventListener(elements.importConversationBtn, 'click', importConversationFromFile);
-    addSafeEventListener(elements.exportConversationBtn, 'click', exportConversationToFile);
+    addSafeEventListener(elements.exportJsonBtn, 'click', exportConversationToJson);
+    addSafeEventListener(elements.exportMdBtn, 'click', exportConversationToMarkdown);
 
+    setupSystemPrompt();
     setupSpeedControl();
     checkApiKey();
 });
