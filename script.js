@@ -26,10 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
         savedConversationsList: document.getElementById('saved-conversations-list'),
         importConversationBtn: document.getElementById('import-conversation-btn'),
         exportJsonBtn: document.getElementById('export-json-btn'),
-        exportMdBtn: document.getElementById('export-md-btn'), // <<-- CORREÇÃO: Vírgula que faltava foi adicionada na versão anterior
+        exportMdBtn: document.getElementById('export-md-btn'),
+        // NOVO ELEMENTO
+        openAssistantLink: document.getElementById('open-assistant-link'),
     };
-
-    // ... (O resto do arquivo é o mesmo que a última versão funcional)
     
     // ================================================================
     // 2. VARIÁVEIS DE ESTADO
@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedChunks = [], currentChunkIndex = 0;
     let isTyping = false, typingSpeed = 180;
 
+    // ================================================================
+    // 3. FUNÇÕES DE UI (INTERFACE DO USUÁRIO)
+    // ================================================================
     const ui = {
         showLoading: () => { if (elements.loadingIndicator) elements.loadingIndicator.classList.remove('hidden'); },
         hideLoading: () => { if (elements.loadingIndicator) elements.loadingIndicator.classList.add('hidden'); },
@@ -46,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
         lockInput: () => { if (elements.userInput) elements.userInput.disabled = true; if (elements.sendButton) elements.sendButton.disabled = true; },
         unlockInput: () => { if (elements.userInput) elements.userInput.disabled = false; if (elements.sendButton) elements.sendButton.disabled = false; if (elements.userInput) elements.userInput.focus(); }
     };
+    
+    // ================================================================
+    // 4. FUNÇÕES PRINCIPAIS DO CHAT
+    // ================================================================
     function addSafeEventListener(element, event, handler) { if (element) { element.addEventListener(event, handler); } }
     
     function setupSystemPrompt() { const savedSystemPrompt = localStorage.getItem('systemPrompt'); if (savedSystemPrompt) { elements.systemPromptInput.value = savedSystemPrompt; conversationHistory.systemPrompt = savedSystemPrompt; } addSafeEventListener(elements.systemPromptInput, 'input', () => { const currentPrompt = elements.systemPromptInput.value; localStorage.setItem('systemPrompt', currentPrompt); conversationHistory.systemPrompt = currentPrompt; }); }
@@ -60,6 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleContinue() { if (isTyping) return; ui.hideContinueBtn(); currentChunkIndex++; displayChunks(); }
     function handleDeleteMessage(timestamp) { if (confirm("Tem certeza de que deseja apagar esta mensagem permanentemente?")) { conversationHistory.messages = conversationHistory.messages.filter(msg => msg.timestamp !== timestamp); const messageElement = document.querySelector(`.message[data-timestamp="${timestamp}"]`); if (messageElement) { messageElement.remove(); } updateContextMeter(); } }
     function updateContextMeter() { if (!elements.contextMeter) return; const totalChars = conversationHistory.messages.reduce((sum, message) => { return sum + (message.content ? message.content.length : 0); }, 0); const approximateTokens = Math.round(totalChars / 4); elements.contextMeter.textContent = `Contexto: ~${approximateTokens.toLocaleString('pt-BR')} tokens`; }
+    
+    // ================================================================
+    // 5. FUNÇÕES DE GERENCIAMENTO DE CONVERSA
+    // ================================================================
     function saveConversation() { const name = elements.conversationNameInput.value.trim(); if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; savedConversations.push(newConversation); localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); alert(`Conversa "${name}" salva com sucesso!`); elements.conversationNameInput.value = ''; renderSavedConversations(); }
     function loadConversation(timestamp) { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); if (conversationToLoad) { conversationHistory = conversationToLoad.history; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); elements.toolsSidebar.classList.remove('open'); } }
     function deleteConversation(timestamp) { let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); renderSavedConversations(); } }
@@ -67,10 +78,33 @@ document.addEventListener('DOMContentLoaded', () => {
     function exportConversationToJson() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo para o backup (.json):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.json') ? filename : `${filename}.json`; const jsonString = JSON.stringify(conversationHistory, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
     function exportConversationToMarkdown() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } let markdownContent = `# DiálogoGemini - Conversa\n\n`; if (conversationHistory.systemPrompt) { markdownContent += `## Instrução do Assistente (Persona)\n\n`; markdownContent += `> ${conversationHistory.systemPrompt}\n\n`; markdownContent += `---\n\n`; } conversationHistory.messages.forEach(message => { const role = message.role === 'user' ? 'Usuário' : 'Assistente'; const date = new Date(message.timestamp); const formattedDateTime = date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); markdownContent += `**${role}** (*${formattedDateTime}*):\n\n`; markdownContent += `${message.content}\n\n`; markdownContent += `---\n\n`; }); const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo de leitura (.md):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.md') ? filename : `${filename}.md`; const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
     function importConversationFromFile() { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json'; input.onchange = (event) => { const file = event.target.files[0]; if (!file) { return; } const reader = new FileReader(); reader.onload = (e) => { try { const importedObject = JSON.parse(e.target.result); if (typeof importedObject !== 'object' || importedObject === null || !Array.isArray(importedObject.messages)) { throw new Error("O arquivo não parece ser um histórico de conversa válido. Estrutura principal não encontrada."); } conversationHistory = importedObject; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert("Conversa importada com sucesso!"); elements.toolsSidebar.classList.remove('open'); } catch (error) { console.error("Erro ao importar o arquivo:", error); alert(`Ocorreu um erro ao ler o arquivo: ${error.message}`); } }; reader.readAsText(file); }; input.click(); }
+    
+    // ================================================================
+    // 6. INICIALIZAÇÃO E CONFIGURAÇÕES
+    // ================================================================
     function saveApiKey() { const apiKey = elements.apiKeyInput.value.trim(); if (apiKey) { localStorage.setItem('geminiApiKey', apiKey); elements.apiKeyModal.classList.add('hidden'); startNewChat(); } else { alert("Por favor, insira uma chave de API válida."); } }
     function setupSpeedControl() { if (!elements.speedSlider) return; const savedSpeed = localStorage.getItem('typingSpeed'); if (savedSpeed) { typingSpeed = parseInt(savedSpeed, 10); elements.speedSlider.value = savedSpeed; } addSafeEventListener(elements.speedSlider, 'input', (e) => { typingSpeed = parseInt(e.target.value, 10); localStorage.setItem('typingSpeed', typingSpeed); }); }
     function checkApiKey() { if (localStorage.getItem('geminiApiKey')) { startNewChat(); } else { if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); } }
     
+   // ================================================================
+// 7. ASSISTENTE DE PROJETO (NOVA FUNCIONALIDADE)
+// ================================================================
+function openProjectAssistant(event) {
+    event.preventDefault(); // Impede o link de navegar
+
+    // COMANDO CORRETO QUE DESCOBRIMOS!
+    if (window.GPT_CHAT_IFRAME_FUNCTIONS && typeof window.GPT_CHAT_IFRAME_FUNCTIONS.toogleChat === 'function') {
+        window.GPT_CHAT_IFRAME_FUNCTIONS.toogleChat();
+    } else {
+        // Mensagem de segurança caso o widget mude no futuro.
+        alert('Não foi possível se comunicar com o assistente no momento.');
+        console.error('API do Assistente de Projeto (GPT_CHAT_IFRAME_FUNCTIONS) não foi encontrada.');
+    }
+}
+    
+    // ================================================================
+    // 8. REGISTRO DE EVENTOS (EVENT LISTENERS)
+    // ================================================================
     addSafeEventListener(elements.chatWindow, 'click', (event) => { const target = event.target.closest('.delete-message-btn'); if (target) { const timestamp = target.dataset.timestamp; handleDeleteMessage(timestamp); } });
     addSafeEventListener(elements.sendButton, 'click', handleNewPrompt);
     addSafeEventListener(elements.userInput, 'keypress', (event) => { if (event.key === 'Enter') handleNewPrompt(); });
@@ -86,7 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
     addSafeEventListener(elements.importConversationBtn, 'click', importConversationFromFile);
     addSafeEventListener(elements.exportJsonBtn, 'click', exportConversationToJson);
     addSafeEventListener(elements.exportMdBtn, 'click', exportConversationToMarkdown);
+    // NOVO EVENTO
+    addSafeEventListener(elements.openAssistantLink, 'click', openProjectAssistant);
 
+    // ================================================================
+    // 9. EXECUÇÃO INICIAL
+    // ================================================================
     setupSystemPrompt();
     setupSpeedControl();
     checkApiKey();

@@ -37,9 +37,7 @@
                 <h3>Backup / Transferência (Arquivos)</h3>
                 <p class="tool-description">Use para salvar um arquivo no seu computador, mover para outro dispositivo ou guardar como um backup definitivo.</p>
                 <button id="import-conversation-btn" class="sidebar-btn">Importar de Arquivo (.json)</button>
-                <!-- BOTÃO RENOMEADO -->
                 <button id="export-json-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar para Backup (.json)</button>
-                <!-- NOVO BOTÃO -->
                 <button id="export-md-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar para Leitura (.md)</button>
             </div>
             <hr>
@@ -71,7 +69,7 @@
         </main>
         <footer>
             <div id="prompt-container">
-                <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." disabled autocomplete= "off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." disabled autocomplete= "new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
                 <button id="send-btn" disabled>Enviar</button>
             </div>
             <div id="controls-footer">
@@ -81,6 +79,8 @@
                         <label for="speed-slider">Velocidade</label>
                         <input type="range" id="speed-slider" min="50" max="250" value="180">
                     </div>
+                    <!-- NOVO LINK PARA O ASSISTENTE DE PROJETO -->
+                    <a href="#" id="open-assistant-link" title="Abrir Assistente de Projeto">❓ Assistente</a>
                     <a href="#" id="new-chat-link">Nova Conversa</a>
                 </div>
                 <div id="context-meter-container">
@@ -89,7 +89,19 @@
             </div>
         </footer>
     </div>
+
+    <!-- Scripts de Terceiros e da Aplicação -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="./script.js"></script>
+
+    <!-- CONFIGURAÇÃO E SCRIPT DO ASSISTENTE DE PROJETO (GPTMAKER) -->
+    <script>
+      window.gptMakerOptions = { launcher: { hidden: true } };
+    </script>
+    <script 
+     async 
+     src="https://app.gptmaker.ai/widget/3E3BFFBBC4641249C0729E18DC1FD70E/float.js">
+    </script>
+
 </body>
 </html>

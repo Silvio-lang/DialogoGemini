@@ -597,3 +597,14 @@ hr {
 .delete-message-btn:hover {
     color: #dc3545; /* Vermelho ao passar o mouse sobre a lixeira */
 }
+
+/* 
+  ================================================================
+  HACKS E CORREÇÕES DE TERCEIROS
+  ================================================================
+*/
+
+/* Esconde o botão flutuante padrão do widget GPTmaker */
+#click-plug-to-support {
+    display: none !important;
+}
