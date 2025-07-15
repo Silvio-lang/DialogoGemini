@@ -608,3 +608,34 @@ hr {
 #click-plug-to-support {
     display: none !important;
 }
+
+/* 
+  ================================================================
+  Layout do Rodapé
+  ================================================================
+*/
+
+#controls-footer {
+    display: flex;
+    justify-content: space-between; /* Mantém os grupos em lados opostos */
+    align-items: center; /* Alinha verticalmente para um visual limpo */
+    padding: 8px 15px; /* Adiciona um pouco de respiro */
+    gap: 20px; /* Adiciona um espaço mínimo entre os elementos */
+}
+
+#controls {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espaçamento entre os links da esquerda (Guia, Velocidade, etc.) */
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas pequenas */
+}
+
+/* 
+   Ajuste para o container do medidor. 
+   O 'margin-left: auto' pode ser usado como alternativa ao space-between no pai,
+   mas a estrutura atual com 'space-between' e 'gap' é mais robusta.
+   Este seletor garante que ele não cresça descontroladamente.
+*/
+#context-meter-container {
+    flex-shrink: 0; /* Impede que o medidor de contexto seja espremido */
+}
