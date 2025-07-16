@@ -29,10 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
         exportMdBtn: document.getElementById('export-md-btn'),
         openAssistantLink: document.getElementById('open-assistant-link'),
         
+        analyzeTitleBtn: document.getElementById('analyze-title-btn'),
+        analyzeTopicsBtn: document.getElementById('analyze-topics-btn'),
+        analyzeSummaryBtn: document.getElementById('analyze-summary-btn'),
+        analyzeDetailedBtn: document.getElementById('analyze-detailed-btn'),
+
         // ELEMENTOS DA BUSCA INTELIGENTE
         toggleSearchBtn: document.getElementById('toggle-search-btn'),
         searchBtn: document.getElementById('search-btn'),
         clearSearchBtn: document.getElementById('clear-search-btn'),
+
     };
     
     // ================================================================
@@ -98,8 +104,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- FIM DAS FUNÇÕES DE BUSCA ---
 
+// ================================================================
+// 5. FUNÇÕES DE ANÁLISE DE CONVERSA (VERSÃO CORRIGIDA)
+// ================================================================
+async function callAnalysisAPI(instruction, analysisTitle) {
+    if (conversationHistory.messages.length < 2) {
+        alert("A conversa é muito curta para ser analisada.");
+        return; 
+    }
+
+    ui.showLoading();
+    elements.toolsSidebar.classList.remove('open');
+
+    try {
+        const apiKey = localStorage.getItem('geminiApiKey');
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        
+        const historyAsText = conversationHistory.messages
+            .map(msg => `${msg.role === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}`)
+            .join('\n\n');
+
+        const fullPrompt = `${instruction}\n\n---\n\nHISTÓRICO DA CONVERSA:\n${historyAsText}`;
+        const requestBody = { contents: [{ parts: [{ text: fullPrompt }] }] };
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+        
+        // Verificação de segurança para garantir que a resposta veio no formato esperado
+        if (!response.ok || !data.candidates || !data.candidates[0].content) {
+            const errorReason = data?.error?.message || data?.promptFeedback?.blockReason || 'A API não retornou um resultado válido.';
+            throw new Error(errorReason);
+        }
+        
+        // --- ESTE TRECHO ESTAVA FALTANDO / INCORRETO ---
+        // 1. Extrai o texto da resposta da API
+        const resultText = data.candidates[0].content.parts[0].text;
+        const fullAnalysisContent = `**Análise: ${analysisTitle}**\n\n${resultText}`;
+
+        // 2. Cria o objeto de mensagem para a análise
+        const analysisMessage = {
+            role: 'model',
+            content: fullAnalysisContent,
+            timestamp: new Date().toISOString()
+        };
+
+        // 3. Adiciona a análise ao histórico
+        conversationHistory.messages.push(analysisMessage);
+        
+        // 4. Exibe na tela
+        displayStaticMessage(analysisMessage.content, 'model', analysisMessage.timestamp);
+        
+        // 5. Atualiza o medidor de tokens
+        updateContextMeter();
+        // --- FIM DO TRECHO CORRIGIDO ---
+
+    } catch (error) {
+        console.error(`Erro na análise (${analysisTitle}):`, error);
+        displayStaticMessage(`**Erro na Análise**\n\nOcorreu um erro: ${error.message}`, 'model');
+    } finally {
+        ui.hideLoading();
+        ui.unlockInput();
+    }
+}
+
     function setupSystemPrompt() { const savedSystemPrompt = localStorage.getItem('systemPrompt'); if (savedSystemPrompt) { elements.systemPromptInput.value = savedSystemPrompt; conversationHistory.systemPrompt = savedSystemPrompt; } addSafeEventListener(elements.systemPromptInput, 'input', () => { const currentPrompt = elements.systemPromptInput.value; localStorage.setItem('systemPrompt', currentPrompt); conversationHistory.systemPrompt = currentPrompt; }); }
-    function startNewChat() { conversationHistory.messages = []; const globalSystemPrompt = localStorage.getItem('systemPrompt') || ''; conversationHistory.systemPrompt = globalSystemPrompt; elements.systemPromptInput.value = globalSystemPrompt; cachedChunks = []; currentChunkIndex = 0; isTyping = false; ui.hideContinueBtn(); if (isSearchMode) { toggleSearchMode(); } clearSearch(); if (!localStorage.getItem('hasSeenTour')) { runWelcomeTour(); } else { elements.chatWindow.innerHTML = ''; displayStaticMessage('Olá! Como posso ajudar hoje?', 'model'); ui.unlockInput(); } updateContextMeter(); }
+    function startNewChat() { conversationHistory.messages = []; const globalSystemPrompt = localStorage.getItem('systemPrompt') || ''; conversationHistory.systemPrompt = globalSystemPrompt; elements.conversationNameInput.value = ''; elements.systemPromptInput.value = globalSystemPrompt; cachedChunks = []; currentChunkIndex = 0; isTyping = false; ui.hideContinueBtn(); if (isSearchMode) { toggleSearchMode(); } clearSearch(); if (!localStorage.getItem('hasSeenTour')) { runWelcomeTour(); } else { elements.chatWindow.innerHTML = ''; displayStaticMessage('Olá! Como posso ajudar hoje?', 'model'); ui.unlockInput(); } updateContextMeter(); }
     async function handleNewPrompt() { const userMessageText = elements.userInput.value.trim(); if (!userMessageText || isTyping) return; ui.hideContinueBtn(); const userMessage = { role: 'user', content: userMessageText, timestamp: new Date().toISOString() }; conversationHistory.messages.push(userMessage); displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp); updateContextMeter(); elements.userInput.value = ''; ui.lockInput(); ui.showLoading(); const apiFormattedHistory = conversationHistory.messages.map(msg => ({ role: msg.role, parts: [{ text: msg.content }] })); try { const apiKey = localStorage.getItem('geminiApiKey'); const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`; const requestBody = { contents: apiFormattedHistory }; if (conversationHistory.systemPrompt) { requestBody.systemInstruction = { parts: [{ text: conversationHistory.systemPrompt }] }; } const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) }); if (!response.ok) { const errorBody = await response.json(); throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`); } const data = await response.json(); const fullResponseText = data.candidates[0].content.parts[0].text; const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() }; conversationHistory.messages.push(modelMessage); updateContextMeter(); cachedChunks = fullResponseText.split(/\n{2,}/g).filter(chunk => chunk.trim() !== ''); currentChunkIndex = 0; ui.hideLoading(); if (cachedChunks.length > 0) { displayChunks(); } else { ui.unlockInput(); } } catch (error) { console.error("Erro detalhado:", error); displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model', new Date().toISOString()); ui.hideLoading(); ui.unlockInput(); } }
     function rebuildChatFromHistory() { elements.chatWindow.innerHTML = ''; conversationHistory.messages.forEach(message => { const role = message.role === 'model' ? 'gemini' : 'user'; displayStaticMessage(message.content, role, message.timestamp); }); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; updateContextMeter(); }
     function displayStaticMessage(text, role, timestamp) { const messageElement = createMessageElement(role, timestamp); messageElement.querySelector('p').innerHTML = marked.parse(text); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; }
@@ -111,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleDeleteMessage(timestamp) { if (confirm("Tem certeza de que deseja apagar esta mensagem permanentemente?")) { conversationHistory.messages = conversationHistory.messages.filter(msg => msg.timestamp !== timestamp); const messageElement = document.querySelector(`.message[data-timestamp="${timestamp}"]`); if (messageElement) { messageElement.remove(); } updateContextMeter(); } }
     function updateContextMeter() { if (!elements.contextMeter) return; const totalChars = conversationHistory.messages.reduce((sum, message) => { return sum + (message.content ? message.content.length : 0); }, 0); const approximateTokens = Math.round(totalChars / 4); elements.contextMeter.textContent = `Contexto: ~${approximateTokens.toLocaleString('pt-BR')} tokens`; }
     function saveConversation() { const name = elements.conversationNameInput.value.trim(); if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; savedConversations.push(newConversation); localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); alert(`Conversa "${name}" salva com sucesso!`); elements.conversationNameInput.value = ''; renderSavedConversations(); }
-    function loadConversation(timestamp) { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); if (conversationToLoad) { conversationHistory = conversationToLoad.history; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); elements.toolsSidebar.classList.remove('open'); } }
+    function loadConversation(timestamp) { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); if (conversationToLoad) { conversationHistory = conversationToLoad.history; rebuildChatFromHistory(); elements.conversationNameInput.value = conversationToLoad.name;  if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); elements.toolsSidebar.classList.remove('open'); } }
     function deleteConversation(timestamp) { let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); renderSavedConversations(); } }
     function renderSavedConversations() { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; elements.savedConversationsList.innerHTML = ''; if (savedConversations.length === 0) { elements.savedConversationsList.innerHTML = '<p style="padding: 10px; text-align: center; color: #6c757d;">Nenhuma conversa salva.</p>'; return; } savedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); savedConversations.forEach(conv => { const date = new Date(conv.timestamp); const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`; const item = document.createElement('div'); item.className = 'saved-conversation-item'; item.innerHTML = `<div class="conversation-info"><span class="name">${conv.name}</span><span class="timestamp">${formattedDate}</span></div><div class="conversation-actions"><button class="load-btn" data-timestamp="${conv.timestamp}">Carregar</button><button class="delete-btn" data-timestamp="${conv.timestamp}">Excluir</button></div>`; elements.savedConversationsList.appendChild(item); }); }
     function exportConversationToJson() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo para o backup (.json):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.json') ? filename : `${filename}.json`; const jsonString = JSON.stringify(conversationHistory, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
@@ -156,10 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- NOVOS LISTENERS DA BUSCA INTELIGENTE ---
     addSafeEventListener(elements.toggleSearchBtn, 'click', toggleSearchMode);
     addSafeEventListener(elements.searchBtn, 'click', performSearch);
-    addSafeEventListener(elements.clearSearchBtn, 'click', () => {
-        clearSearch();
-        elements.userInput.value = '';
-    });
+    addSafeEventListener(elements.clearSearchBtn, 'click', () => { clearSearch(); elements.userInput.value = ''; });
+
+// --- LISTENERS DO ANALISADOR DE CONVERSA ---
+addSafeEventListener(elements.analyzeTitleBtn, 'click', () => { callAnalysisAPI("Gere um título curto e conciso para a conversa a seguir.", "Título da Conversa"); });
+addSafeEventListener(elements.analyzeTopicsBtn, 'click', () => { callAnalysisAPI("Liste os principais tópicos da conversa a seguir em formato de bullet points.", "Tópicos Principais");});
+addSafeEventListener(elements.analyzeSummaryBtn, 'click', () => { callAnalysisAPI("Liste os tópicos da conversa a seguir e adicione uma descrição curta (uma frase) para cada um.", "Resumo dos Tópicos"); });
+addSafeEventListener(elements.analyzeDetailedBtn, 'click', () => { callAnalysisAPI("Gere um resumo detalhado, em parágrafos, conectando as ideias da conversa a seguir.", "Resumo Detalhado"); });
 
     // ================================================================
     // 9. EXECUÇÃO INICIAL
