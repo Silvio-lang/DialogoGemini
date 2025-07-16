@@ -114,11 +114,17 @@ footer {
 
 #user-input {
     flex-grow: 1;
-    padding: 12px;
+    padding: 12px 18px;
     border: 1px solid #ccc;
-    border-radius: 20px;
-    margin-right: 10px;
+    border-radius: 22px;
     font-size: 1em;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;         /* Impede que o usuário redimensione com o mouse */
+    overflow-y: hidden;   /* Esconde a barra de rolagem vertical */
+    min-height: 24px;     /* Altura mínima para começar */
+    max-height: 120px;    /* Limite de crescimento (aprox. 5 linhas) */
+    box-sizing: border-box; /* <<< ADICIONE ESTA LINHA */
 }
 
 #user-input:focus {
@@ -730,4 +736,24 @@ hr {
 #toggle-search-btn.active {
     background-color: #e0eaf6;
     border-color: #4A90E2;
+}
+
+/* ================================================================ */
+/* ESTILO PARA O BOTÃO DE LIMPAR PROMPT (VASSOURINHA)             */
+/* ================================================================ */
+
+#clear-prompt-btn {
+    background: none;    /* Sem fundo */
+    border: none;        /* Sem borda */
+    font-size: 1.5em;    /* Aumenta o tamanho do emoji */
+    color: #999;        /* Cor cinza discreta */
+    cursor: pointer;     /* Mãozinha ao passar o mouse */
+    padding: 5px;
+    flex-shrink: 0;      /* Impede que o ícone seja espremido */
+    line-height: 1;      /* Garante alinhamento vertical */
+}
+
+/* Efeito ao passar o mouse */
+#clear-prompt-btn:hover {
+    color: #000; /* Fica preto para indicar interatividade */
 }

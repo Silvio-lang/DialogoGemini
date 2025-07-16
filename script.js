@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBtn: document.getElementById('search-btn'),
         clearSearchBtn: document.getElementById('clear-search-btn'),
 
+        clearPromptBtn: document.getElementById('clear-prompt-btn'), 
+
     };
     
     // ================================================================
@@ -238,6 +240,24 @@ addSafeEventListener(elements.analyzeTopicsBtn, 'click', () => { callAnalysisAPI
 addSafeEventListener(elements.analyzeSummaryBtn, 'click', () => { callAnalysisAPI("Liste os tópicos da conversa a seguir e adicione uma descrição curta (uma frase) para cada um.", "Resumo dos Tópicos"); });
 addSafeEventListener(elements.analyzeDetailedBtn, 'click', () => { callAnalysisAPI("Gere um resumo detalhado, em parágrafos, conectando as ideias da conversa a seguir.", "Resumo Detalhado"); });
 
+// --- AÇÃO DE LIMPAR O PROMPT AO CLICAR NA VASSOURA ---
+addSafeEventListener(elements.clearPromptBtn, 'click', () => {
+    elements.userInput.value = '';                 // 1. Limpa o texto do campo
+    elements.clearPromptBtn.classList.add('hidden'); // 2. Esconde a vassourinha novamente
+    elements.userInput.focus();                      // 3. Devolve o foco para o campo, para que o usuário possa digitar em seguida 
+});
+
+// MOSTRA/ESCONDE O BOTÃO DE LIMPAR PROMPT (VASSOURA)
+addSafeEventListener(elements.userInput, 'input', () => {
+    // Lógica da vassourinha que já existe
+    const hasText = elements.userInput.value.length > 0;
+    elements.clearPromptBtn.classList.toggle('hidden', !hasText);
+
+    // --- LÓGICA DE AUTO-CRESCIMENTO (ADICIONE AQUI) ---
+    const textarea = elements.userInput;
+    textarea.style.height = 'auto'; // 1. Reseta a altura para o mínimo
+    textarea.style.height = `${textarea.scrollHeight}px`; // 2. Ajusta para a altura do conteúdo
+});
     // ================================================================
     // 9. EXECUÇÃO INICIAL
     // ================================================================
