@@ -67,27 +67,33 @@
             <div id="loading-indicator" class="hidden"><div class="spinner"></div></div>
             <div id="continue-container" class="hidden"><button id="continue-btn">Continuar</button></div>
         </main>
-        <footer>
-            <div id="prompt-container">
-                <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." value= "" disabled autocomplete= "off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <button id="send-btn" disabled>Enviar</button>
+
+<footer>
+    <div id="prompt-container">
+        <!-- ESTA É A ÚNICA LUPA QUE DEVE EXISTIR NO ARQUIVO -->
+        <button id="toggle-search-btn" title="Alternar para Busca">🔍</button>
+
+        <input type="text" id="user-input" ... >
+        
+        <button id="send-btn" ... >Enviar</button>
+        <button id="search-btn" class="hidden" ... >Buscar</button>
+        <button id="clear-search-btn" class="hidden" ... >Limpar</button>
+    </div>
+    <div id="controls-footer">
+        <div id="controls">
+            <a href="#" id="show-tour-link">Guia Inicial</a>
+            <div id="speed-control-container">
+                <label for="speed-slider">Velocidade</label>
+                <input type="range" id="speed-slider" min="50" max="250" value="180">
             </div>
-            <div id="controls-footer">
-                <div id="controls">
-                    <a href="#" id="show-tour-link">Guia Inicial</a>
-                    <div id="speed-control-container">
-                        <label for="speed-slider">Velocidade :</label>
-                        <input type="range" id="speed-slider" min="50" max="250" value="180">
-                    </div>
-                    <!-- NOVO LINK PARA O ASSISTENTE DE PROJETO -->
-                    <a href="#" id="open-assistant-link" title="Abrir Assistente de Projeto">❓ AJUDA</a>
-                    <a href="#" id="new-chat-link">Nova Conversa</a>
-                </div>
-                <div id="context-meter-container">
-                    <span id="context-meter">Contexto: ~0 tokens</span>
-                </div>
-            </div>
-        </footer>
+            <a href="#" id="open-assistant-link" title="Abrir Assistente de Projeto">❓ Assistente</a>
+            <a href="#" id="new-chat-link">Nova Conversa</a>
+        </div>
+        <div id="context-meter-container">
+            <span id="context-meter">Contexto: ~0 tokens</span>
+        </div>
+    </div>
+</footer>
     </div>
 
     <!-- Scripts de Terceiros e da Aplicação -->

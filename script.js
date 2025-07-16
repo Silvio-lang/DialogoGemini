@@ -27,8 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
         importConversationBtn: document.getElementById('import-conversation-btn'),
         exportJsonBtn: document.getElementById('export-json-btn'),
         exportMdBtn: document.getElementById('export-md-btn'),
-        // NOVO ELEMENTO
         openAssistantLink: document.getElementById('open-assistant-link'),
+        
+        // ELEMENTOS DA BUSCA INTELIGENTE
+        toggleSearchBtn: document.getElementById('toggle-search-btn'),
+        searchBtn: document.getElementById('search-btn'),
+        clearSearchBtn: document.getElementById('clear-search-btn'),
     };
     
     // ================================================================
@@ -37,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let conversationHistory = { messages: [], systemPrompt: null };
     let cachedChunks = [], currentChunkIndex = 0;
     let isTyping = false, typingSpeed = 180;
+    let isSearchMode = false; // <<<-- NOVO ESTADO PARA O MODO DE BUSCA
 
     // ================================================================
     // 3. FUNÇÕES DE UI (INTERFACE DO USUÁRIO)
@@ -51,12 +56,50 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     // ================================================================
-    // 4. FUNÇÕES PRINCIPAIS DO CHAT
+    // 4. FUNÇÕES PRINCIPAIS E DE BUSCA
     // ================================================================
     function addSafeEventListener(element, event, handler) { if (element) { element.addEventListener(event, handler); } }
     
+    // --- NOVAS FUNÇÕES E FUNÇÕES MODIFICADAS PARA A BUSCA ---
+    function performSearch() {
+        const searchTerm = elements.userInput.value.trim();
+        rebuildChatFromHistory(); 
+        if (!searchTerm) return;
+
+        const chatMessages = elements.chatWindow.querySelectorAll('.message p');
+        const searchRegex = new RegExp(searchTerm, 'gi');
+
+        chatMessages.forEach(p => {
+            const originalText = p.innerHTML;
+            const newText = originalText.replace(searchRegex, (match) => `<mark>${match}</mark>`);
+            p.innerHTML = newText;
+        });
+    }
+
+    function clearSearch() {
+        rebuildChatFromHistory();
+    }
+    
+    function toggleSearchMode() {
+        isSearchMode = !isSearchMode;
+
+        elements.sendButton.classList.toggle('hidden', isSearchMode);
+        elements.searchBtn.classList.toggle('hidden', !isSearchMode);
+        elements.clearSearchBtn.classList.toggle('hidden', !isSearchMode);
+        elements.toggleSearchBtn.classList.toggle('active', isSearchMode);
+
+        if (isSearchMode) {
+            elements.userInput.placeholder = "Localizar na conversa...";
+            clearSearch(); // Limpa marcações anteriores ao entrar no modo de busca
+        } else {
+            elements.userInput.placeholder = "Digite sua mensagem aqui...";
+            clearSearch(); // Limpa marcações ao sair do modo de busca
+        }
+    }
+    // --- FIM DAS FUNÇÕES DE BUSCA ---
+
     function setupSystemPrompt() { const savedSystemPrompt = localStorage.getItem('systemPrompt'); if (savedSystemPrompt) { elements.systemPromptInput.value = savedSystemPrompt; conversationHistory.systemPrompt = savedSystemPrompt; } addSafeEventListener(elements.systemPromptInput, 'input', () => { const currentPrompt = elements.systemPromptInput.value; localStorage.setItem('systemPrompt', currentPrompt); conversationHistory.systemPrompt = currentPrompt; }); }
-    function startNewChat() { conversationHistory.messages = []; const globalSystemPrompt = localStorage.getItem('systemPrompt') || ''; conversationHistory.systemPrompt = globalSystemPrompt; elements.systemPromptInput.value = globalSystemPrompt; cachedChunks = []; currentChunkIndex = 0; isTyping = false; ui.hideContinueBtn(); if (!localStorage.getItem('hasSeenTour')) { runWelcomeTour(); } else { elements.chatWindow.innerHTML = ''; displayStaticMessage('DiálogoGemini às suas ordens...', 'model'); ui.unlockInput(); } updateContextMeter(); }
+    function startNewChat() { conversationHistory.messages = []; const globalSystemPrompt = localStorage.getItem('systemPrompt') || ''; conversationHistory.systemPrompt = globalSystemPrompt; elements.systemPromptInput.value = globalSystemPrompt; cachedChunks = []; currentChunkIndex = 0; isTyping = false; ui.hideContinueBtn(); if (isSearchMode) { toggleSearchMode(); } clearSearch(); if (!localStorage.getItem('hasSeenTour')) { runWelcomeTour(); } else { elements.chatWindow.innerHTML = ''; displayStaticMessage('Olá! Como posso ajudar hoje?', 'model'); ui.unlockInput(); } updateContextMeter(); }
     async function handleNewPrompt() { const userMessageText = elements.userInput.value.trim(); if (!userMessageText || isTyping) return; ui.hideContinueBtn(); const userMessage = { role: 'user', content: userMessageText, timestamp: new Date().toISOString() }; conversationHistory.messages.push(userMessage); displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp); updateContextMeter(); elements.userInput.value = ''; ui.lockInput(); ui.showLoading(); const apiFormattedHistory = conversationHistory.messages.map(msg => ({ role: msg.role, parts: [{ text: msg.content }] })); try { const apiKey = localStorage.getItem('geminiApiKey'); const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`; const requestBody = { contents: apiFormattedHistory }; if (conversationHistory.systemPrompt) { requestBody.systemInstruction = { parts: [{ text: conversationHistory.systemPrompt }] }; } const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) }); if (!response.ok) { const errorBody = await response.json(); throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`); } const data = await response.json(); const fullResponseText = data.candidates[0].content.parts[0].text; const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() }; conversationHistory.messages.push(modelMessage); updateContextMeter(); cachedChunks = fullResponseText.split(/\n{2,}/g).filter(chunk => chunk.trim() !== ''); currentChunkIndex = 0; ui.hideLoading(); if (cachedChunks.length > 0) { displayChunks(); } else { ui.unlockInput(); } } catch (error) { console.error("Erro detalhado:", error); displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model', new Date().toISOString()); ui.hideLoading(); ui.unlockInput(); } }
     function rebuildChatFromHistory() { elements.chatWindow.innerHTML = ''; conversationHistory.messages.forEach(message => { const role = message.role === 'model' ? 'gemini' : 'user'; displayStaticMessage(message.content, role, message.timestamp); }); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; updateContextMeter(); }
     function displayStaticMessage(text, role, timestamp) { const messageElement = createMessageElement(role, timestamp); messageElement.querySelector('p').innerHTML = marked.parse(text); elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight; }
@@ -67,10 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleContinue() { if (isTyping) return; ui.hideContinueBtn(); currentChunkIndex++; displayChunks(); }
     function handleDeleteMessage(timestamp) { if (confirm("Tem certeza de que deseja apagar esta mensagem permanentemente?")) { conversationHistory.messages = conversationHistory.messages.filter(msg => msg.timestamp !== timestamp); const messageElement = document.querySelector(`.message[data-timestamp="${timestamp}"]`); if (messageElement) { messageElement.remove(); } updateContextMeter(); } }
     function updateContextMeter() { if (!elements.contextMeter) return; const totalChars = conversationHistory.messages.reduce((sum, message) => { return sum + (message.content ? message.content.length : 0); }, 0); const approximateTokens = Math.round(totalChars / 4); elements.contextMeter.textContent = `Contexto: ~${approximateTokens.toLocaleString('pt-BR')} tokens`; }
-    
-    // ================================================================
-    // 5. FUNÇÕES DE GERENCIAMENTO DE CONVERSA
-    // ================================================================
     function saveConversation() { const name = elements.conversationNameInput.value.trim(); if (!name) { alert("Por favor, dê um nome para a conversa antes de salvar."); return; } if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar. Inicie uma conversa primeiro."); return; } const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() }; savedConversations.push(newConversation); localStorage.setItem('savedConversations', JSON.stringify(savedConversations)); alert(`Conversa "${name}" salva com sucesso!`); elements.conversationNameInput.value = ''; renderSavedConversations(); }
     function loadConversation(timestamp) { const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp); if (conversationToLoad) { conversationHistory = conversationToLoad.history; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert(`Conversa "${conversationToLoad.name}" carregada com sucesso!`); elements.toolsSidebar.classList.remove('open'); } }
     function deleteConversation(timestamp) { let savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || []; const conversationName = savedConversations.find(c => c.timestamp === timestamp)?.name || "esta conversa"; if (confirm(`Tem certeza que deseja excluir permanentemente "${conversationName}"?`)) { const updatedConversations = savedConversations.filter(c => c.timestamp !== timestamp); localStorage.setItem('savedConversations', JSON.stringify(updatedConversations)); renderSavedConversations(); } }
@@ -78,36 +117,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function exportConversationToJson() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo para o backup (.json):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.json') ? filename : `${filename}.json`; const jsonString = JSON.stringify(conversationHistory, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
     function exportConversationToMarkdown() { if (conversationHistory.messages.length === 0) { alert("A conversa está vazia. Não há nada para exportar."); return; } let markdownContent = `# DiálogoGemini - Conversa\n\n`; if (conversationHistory.systemPrompt) { markdownContent += `## Instrução do Assistente (Persona)\n\n`; markdownContent += `> ${conversationHistory.systemPrompt}\n\n`; markdownContent += `---\n\n`; } conversationHistory.messages.forEach(message => { const role = message.role === 'user' ? 'Usuário' : 'Assistente'; const date = new Date(message.timestamp); const formattedDateTime = date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); markdownContent += `**${role}** (*${formattedDateTime}*):\n\n`; markdownContent += `${message.content}\n\n`; markdownContent += `---\n\n`; }); const defaultName = `conversa_${new Date().toISOString().split('T')[0]}`; const filename = window.prompt("Digite o nome do arquivo de leitura (.md):", defaultName); if (filename === null || filename.trim() === "") { return; } const finalFilename = filename.endsWith('.md') ? filename : `${filename}.md`; const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = finalFilename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); }
     function importConversationFromFile() { const input = document.createElement('input'); input.type = 'file'; input.accept = '.json'; input.onchange = (event) => { const file = event.target.files[0]; if (!file) { return; } const reader = new FileReader(); reader.onload = (e) => { try { const importedObject = JSON.parse(e.target.result); if (typeof importedObject !== 'object' || importedObject === null || !Array.isArray(importedObject.messages)) { throw new Error("O arquivo não parece ser um histórico de conversa válido. Estrutura principal não encontrada."); } conversationHistory = importedObject; rebuildChatFromHistory(); if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; } else { conversationHistory.systemPrompt = elements.systemPromptInput.value; } alert("Conversa importada com sucesso!"); elements.toolsSidebar.classList.remove('open'); } catch (error) { console.error("Erro ao importar o arquivo:", error); alert(`Ocorreu um erro ao ler o arquivo: ${error.message}`); } }; reader.readAsText(file); }; input.click(); }
-    
-    // ================================================================
-    // 6. INICIALIZAÇÃO E CONFIGURAÇÕES
-    // ================================================================
     function saveApiKey() { const apiKey = elements.apiKeyInput.value.trim(); if (apiKey) { localStorage.setItem('geminiApiKey', apiKey); elements.apiKeyModal.classList.add('hidden'); startNewChat(); } else { alert("Por favor, insira uma chave de API válida."); } }
     function setupSpeedControl() { if (!elements.speedSlider) return; const savedSpeed = localStorage.getItem('typingSpeed'); if (savedSpeed) { typingSpeed = parseInt(savedSpeed, 10); elements.speedSlider.value = savedSpeed; } addSafeEventListener(elements.speedSlider, 'input', (e) => { typingSpeed = parseInt(e.target.value, 10); localStorage.setItem('typingSpeed', typingSpeed); }); }
     function checkApiKey() { if (localStorage.getItem('geminiApiKey')) { startNewChat(); } else { if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); } }
-    
-   // ================================================================
-// 7. ASSISTENTE DE PROJETO (NOVA FUNCIONALIDADE)
-// ================================================================
-function openProjectAssistant(event) {
-    event.preventDefault(); // Impede o link de navegar
+    function openProjectAssistant(event) { event.preventDefault(); if (window.GPT_CHAT_IFRAME_FUNCTIONS && typeof window.GPT_CHAT_IFRAME_FUNCTIONS.toogleChat === 'function') { window.GPT_CHAT_IFRAME_FUNCTIONS.toogleChat(); } else { alert('Não foi possível se comunicar com o assistente no momento.'); console.error('API do Assistente de Projeto (GPT_CHAT_IFRAME_FUNCTIONS) não foi encontrada.'); } }
 
-    // COMANDO CORRETO QUE DESCOBRIMOS!
-    if (window.GPT_CHAT_IFRAME_FUNCTIONS && typeof window.GPT_CHAT_IFRAME_FUNCTIONS.toogleChat === 'function') {
-        window.GPT_CHAT_IFRAME_FUNCTIONS.toogleChat();
-    } else {
-        // Mensagem de segurança caso o widget mude no futuro.
-        alert('Não foi possível se comunicar com o assistente no momento.');
-        console.error('API do Assistente de Projeto (GPT_CHAT_IFRAME_FUNCTIONS) não foi encontrada.');
-    }
-}
-    
     // ================================================================
     // 8. REGISTRO DE EVENTOS (EVENT LISTENERS)
     // ================================================================
     addSafeEventListener(elements.chatWindow, 'click', (event) => { const target = event.target.closest('.delete-message-btn'); if (target) { const timestamp = target.dataset.timestamp; handleDeleteMessage(timestamp); } });
+    
+    // --- LISTENER DO ENTER MODIFICADO ---
+    addSafeEventListener(elements.userInput, 'keypress', (event) => {
+        if (event.key === 'Enter') {
+            if (isSearchMode) {
+                performSearch();
+            } else {
+                handleNewPrompt();
+            }
+        }
+    });
+    
     addSafeEventListener(elements.sendButton, 'click', handleNewPrompt);
-    addSafeEventListener(elements.userInput, 'keypress', (event) => { if (event.key === 'Enter') handleNewPrompt(); });
     addSafeEventListener(elements.saveApiKeyBtn, 'click', saveApiKey);
     addSafeEventListener(elements.changeApiKeyLink, 'click', (e) => { e.preventDefault(); if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden'); });
     addSafeEventListener(elements.newChatLink, 'click', (e) => { e.preventDefault(); startNewChat(); });
@@ -120,8 +151,15 @@ function openProjectAssistant(event) {
     addSafeEventListener(elements.importConversationBtn, 'click', importConversationFromFile);
     addSafeEventListener(elements.exportJsonBtn, 'click', exportConversationToJson);
     addSafeEventListener(elements.exportMdBtn, 'click', exportConversationToMarkdown);
-    // NOVO EVENTO
     addSafeEventListener(elements.openAssistantLink, 'click', openProjectAssistant);
+
+    // --- NOVOS LISTENERS DA BUSCA INTELIGENTE ---
+    addSafeEventListener(elements.toggleSearchBtn, 'click', toggleSearchMode);
+    addSafeEventListener(elements.searchBtn, 'click', performSearch);
+    addSafeEventListener(elements.clearSearchBtn, 'click', () => {
+        clearSearch();
+        elements.userInput.value = '';
+    });
 
     // ================================================================
     // 9. EXECUÇÃO INICIAL

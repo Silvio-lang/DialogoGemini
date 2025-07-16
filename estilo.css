@@ -108,6 +108,8 @@ footer {
 
 #prompt-container {
     display: flex;
+    align-items: center; /* Alinha todos os itens verticalmente ao centro */
+    gap: 10px;           /* Cria um espaço consistente entre os itens */
 }
 
 #user-input {
@@ -638,4 +640,94 @@ hr {
 */
 #context-meter-container {
     flex-shrink: 0; /* Impede que o medidor de contexto seja espremido */
+}
+
+/* 
+  ================================================================
+  CORREÇÕES E ESTILOS PARA A BUSCA INTELIGENTE
+  ================================================================
+*/
+
+/* 1. Garante que o prompt-container se comporte como uma linha flexível */
+#prompt-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* 2. Estilo para o novo botão de Lupa (toggle) */
+#toggle-search-btn {
+    flex-shrink: 0; /* Impede que o botão encolha */
+    background: none;
+    border: 1px solid #ccc;
+    color: #555;
+    padding: 0;
+    width: 44px; /* Tamanho fixo */
+    height: 44px; /* Tamanho fixo */
+    border-radius: 50%; /* Faz o botão ser redondo */
+    font-size: 1.2em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Efeito visual para quando o modo de busca está ativo */
+#toggle-search-btn.active {
+    background-color: #e0eaf6;
+    border-color: #4A90E2;
+}
+
+/* 3. Estilo específico para os botões 'Buscar' e 'Limpar' */
+/*    Usamos seletores mais específicos para não conflitar com '.sidebar-btn' */
+#prompt-container #search-btn,
+#prompt-container #clear-search-btn {
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1em;
+    border: none;
+    color: white;
+    flex-shrink: 0; /* Impede que os botões encolham */
+}
+
+/* Cores individuais */
+#prompt-container #search-btn {
+    background-color: #28a745; /* Verde */
+}
+#prompt-container #search-btn:hover {
+    background-color: #218838;
+}
+
+#prompt-container #clear-search-btn {
+    background-color: #6c757d; /* Cinza */
+}
+#prompt-container #clear-search-btn:hover {
+    background-color: #5a6268;
+}  
+
+#toggle-search-btn {
+    flex-shrink: 0; /* Impede que o botão encolha */
+    background: none;
+    border: 1px solid #ccc;
+    color: #555;
+    padding: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1.5em; /* Tamanho da lupa */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
+#toggle-search-btn:hover {
+    border-color: #4A90E2;
+}
+
+#toggle-search-btn.active {
+    background-color: #e0eaf6;
+    border-color: #4A90E2;
 }
