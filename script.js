@@ -5,11 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const elements = {
         systemPromptInput: document.getElementById('system-prompt-input'),
 
-    sendLevel1Btn: document.getElementById('send-level-1-btn'),
-    sendLevel2Btn: document.getElementById('send-level-2-btn'),
-    sendLevel3Btn: document.getElementById('send-level-3-btn'),
+        sendLevelsContainer: document.getElementById('send-levels-container'),
 
-        sendButton: document.getElementById('send-btn'),
+        sendLevel1Btn: document.getElementById('send-level-1-btn'),
+        sendLevel2Btn: document.getElementById('send-level-2-btn'),
+        sendLevel3Btn: document.getElementById('send-level-3-btn'),
+
         userInput: document.getElementById('user-input'),
         chatWindow: document.getElementById('chat-window'),
         apiKeyModal: document.getElementById('api-key-modal'),
@@ -116,22 +117,28 @@ const ui = {
         rebuildChatFromHistory();
     }
     
-    function toggleSearchMode() {
-        isSearchMode = !isSearchMode;
+function toggleSearchMode() {
+    isSearchMode = !isSearchMode; // Inverte o modo de busca
 
-        elements.sendButton.classList.toggle('hidden', isSearchMode);
-        elements.searchBtn.classList.toggle('hidden', !isSearchMode);
-        elements.clearSearchBtn.classList.toggle('hidden', !isSearchMode);
-        elements.toggleSearchBtn.classList.toggle('active', isSearchMode);
+    // Esconde/mostra o container dos botões 1,2,3
+    elements.sendLevelsContainer.classList.toggle('hidden', isSearchMode);
+    
+    // Esconde/mostra os botões de busca
+    elements.searchBtn.classList.toggle('hidden', !isSearchMode);
+    elements.clearSearchBtn.classList.toggle('hidden', !isSearchMode);
+    
+    // Efeito visual no botão da lupa
+    elements.toggleSearchBtn.classList.toggle('active', isSearchMode);
 
-        if (isSearchMode) {
-            elements.userInput.placeholder = "Localizar na conversa...";
-            clearSearch(); // Limpa marcações anteriores ao entrar no modo de busca
-        } else {
-            elements.userInput.placeholder = "Digite sua mensagem aqui...";
-            clearSearch(); // Limpa marcações ao sair do modo de busca
-        }
+    if (isSearchMode) {
+        elements.userInput.placeholder = "Localizar na conversa...";
+        // Garante que a vassourinha de limpar prompt não apareça no modo de busca
+        elements.clearPromptBtn.classList.add('hidden');
+    } else {
+        elements.userInput.placeholder = "Digite sua mensagem aqui...";
+        clearSearch(); // Limpa as marcações da busca ao sair do modo
     }
+}
     // --- FIM DAS FUNÇÕES DE BUSCA ---
 
 // ================================================================
