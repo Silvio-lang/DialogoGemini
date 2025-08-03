@@ -1,7 +1,9 @@
 /* ================================================================ */
 /* ESTILO.CSS COMPLETO E CORRIGIDO                                  */
 /* ================================================================ */
-
+* {
+    border: 1px solid red !important;
+}
 /* --- Estilos Gerais --- */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -355,4 +357,5 @@ footer {
 #tools-sidebar input[type="text"] {
     width: 100% !important; /* Usa !important para forçar a sobreposição de outras regras */
     box-sizing: border-box !important; /* Garante cálculo de largura correto */
+
 }
