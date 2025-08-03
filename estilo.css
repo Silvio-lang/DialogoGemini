@@ -15,16 +15,26 @@ body {
 
 /* --- Estrutura Principal --- */
 #app-container {
+    /* --- Controle de Largura --- */
     width: 100%;
-    max-width: 800px; /* Aumentado um pouco para acomodar o layout */
-    height: 95vh;     /* Ajustado para melhor visualização em diversas telas */
-    max-height: 900px;
+    /* Valor de largura máxima menor para uma aparência mais 'vertical' em desktops */
+    max-width: 600px; 
+
+    /* --- Controle de Altura --- */
+    height: 95vh; /* Ocupa 95% da altura da tela */
+    max-height: 850px; /* Mas não passa de 850px de altura */
+
+    /* --- Estilos Visuais --- */
     background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    
+    /* --- Layout Interno --- */
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    
+    /* REMOVEMOS A PROPRIEDADE 'aspect-ratio' */
 }
 
 main {
@@ -325,4 +335,24 @@ footer {
     #toggle-search-btn {
         order: -1; /* Coloca a lupa no início da linha */
     }
+}
+.sidebar-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+    /* Adiciona a propriedade box-sizing para um cálculo de largura mais previsível */
+    box-sizing: border-box;
+}
+
+/* Garante que todas as seções de ferramentas ocupem a largura total */
+.tool-section {
+    width: 100%;
+    box-sizing: border-box; /* Garante que padding não afete a largura */
+}
+
+/* Garante que TODOS os textareas e inputs dentro da sidebar ocupem a largura total */
+#tools-sidebar textarea,
+#tools-sidebar input[type="text"] {
+    width: 100% !important; /* Usa !important para forçar a sobreposição de outras regras */
+    box-sizing: border-box !important; /* Garante cálculo de largura correto */
 }
