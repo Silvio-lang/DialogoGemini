@@ -19,7 +19,7 @@
     </script>
     <!-- ================================================================ -->
     
-    <link rel="stylesheet" href="./estilo.css?v=1">
+    <link rel="stylesheet" href="./estilo.css">
 
     <!-- ADICIONEI O CSS DO MODAL AQUI PARA GARANTIR QUE ELE EXISTA -->
     <!-- Mesmo que já esteja no estilo.css, não causa problemas. -->
@@ -34,25 +34,6 @@
         .modal-btn.save { background-color: #28a745; }
     </style>
 </head>
-    <!-- ================================================================ -->
-    <!-- SCRIPT DE DIAGNÓSTICO - ADICIONAR ANTES DE </body>           -->
-    <!-- ================================================================ -->
-    <script>
-        // Este script só executa em telas pequenas
-        if (window.innerWidth <= 768) {
-            const appContainer = document.getElementById('app-container');
-            const alertMessage = `
-                LARGURA DA JANELA: ${window.innerWidth}px
-                ALTURA DA JANELA: ${window.innerHeight}px
-
-                LARGURA DO APP-CONTAINER: ${appContainer.offsetWidth}px
-                ALTURA DO APP-CONTAINER: ${appContainer.offsetHeight}px
-            `;
-            alert(alertMessage);
-        }
-    </script>
-</body>
-</html>
 <body>
 
     <!-- SIDEBAR DE FERRAMENTAS -->
@@ -152,6 +133,4 @@
     <script async src="https://app.gptmaker.ai/widget/3E3BFFBBC4641249C0729E18DC1FD70E/float.js"></script>
 
 </body>
-
 </html>
-
