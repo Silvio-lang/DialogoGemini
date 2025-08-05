@@ -1,8 +1,8 @@
 /* ================================================================ */
-/* ESTILO.CSS - VERSÃO FINAL, LIMPA E REFATORADA                    */
+/* ESTILO.CSS - VERSÃO FINAL COM CORREÇÃO DEFINITIVA PARA MOBILE    */
 /* ================================================================ */
 
-/* --- 1. ESTILOS GERAIS E DE CONTENÇÃO --- */
+/* --- 1. ESTILOS GERAIS E DE CONTENÇÃO (PARA DESKTOP) --- */
 html, body {
     width: 100%;
     height: 100%;
@@ -11,10 +11,10 @@ html, body {
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: #f0f2f5;
-    touch-action: manipulation; 
 }
 
 body {
+    /* Este é o comportamento para DESKTOP: centralizar o app-container */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -23,7 +23,7 @@ body {
 /* --- 2. ESTRUTURA PRINCIPAL DA APLICAÇÃO --- */
 #app-container {
     width: 100%;
-    max-width: 650px; /* Largura máxima para uma aparência vertical em desktops */
+    max-width: 650px;
     height: 95vh;
     max-height: 880px;
     background-color: #ffffff;
@@ -41,7 +41,7 @@ body {
     padding: 10px 20px;
     background-color: #4a90e2;
     color: white;
-    flex-shrink: 0; /* Impede que o header encolha */
+    flex-shrink: 0;
 }
 
 .main-header h1 {
@@ -96,7 +96,7 @@ main {
 footer {
     padding: 10px 15px;
     border-top: 1px solid #dcdfe5;
-    flex-shrink: 0; /* Impede que o footer encolha */
+    flex-shrink: 0;
 }
 
 
@@ -110,6 +110,7 @@ footer {
     margin-bottom: 10px;
     line-height: 1.5;
     word-wrap: break-word;
+    font-size: 1em;
 }
 
 .message p {
@@ -304,9 +305,8 @@ footer {
 .tool-section { margin-bottom: 20px; }
 .tool-section h3 { font-size: 1em; color: #495057; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
 hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
-#tools-sidebar textarea, #tools-sidebar input[type="text"] { width: 100%; box-sizing: border-box; } /* Garante a largura correta */
+#tools-sidebar textarea, #tools-sidebar input[type="text"] { width: 100%; box-sizing: border-box; }
 
-/* ... (Outros estilos da sidebar como .sidebar-btn, .saved-conversation-item, etc.) */
 .sidebar-btn { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; text-align: center; }
 .sidebar-btn:hover { background-color: #0056b3; }
 #saved-conversations-list { max-height: 45vh; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; background-color: #fff; }
@@ -322,30 +322,33 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
 
 /* --- 8. CLASSES UTILITÁRIAS --- */
 .hidden { display: none !important; }
-
-/* Esconde o botão flutuante padrão do widget GPTmaker */
 #click-plug-to-support { display: none !important; }
 
 /* ================================================================ */
-/* 9. REGRAS RESPONSIVAS PARA TELAS PEQUENAS (VERSÃO CORRIGIDA)   */
+/* 9. REGRAS RESPONSIVAS - VERSÃO CORRIGIDA E DEFINITIVA            */
 /* ================================================================ */
 @media (max-width: 768px) {
-    /* Força o contêiner a se comportar como um app de tela cheia */
+
+    /* 1. Reseta o body para parar de centralizar o conteúdo */
+    body {
+        display: block; /* Remove o display:flex e o alinhamento */
+    }
+
+    /* 2. Força o app-container a ocupar a tela inteira */
     #app-container {
         width: 100%;
-        height: 100vh; /* Ocupa 100% da altura da viewport */
-        max-width: none;    /* ANULA a regra de largura máxima do desktop */
-        max-height: none;   /* ANULA a regra de altura máxima do desktop */
-        border-radius: 0;   /* Remove as bordas arredondadas para um visual de tela cheia */
+        height: 100vh;      /* Ocupa 100% da altura da viewport */
+        max-width: none;    /* Anula a regra de largura máxima do desktop */
+        max-height: none;   /* Anula a regra de altura máxima do desktop */
+        border-radius: 0;   /* Remove as bordas para visual de tela cheia */
         box-shadow: none;     /* Remove a sombra */
     }
 
-    /* Ajustes no cabeçalho para caber melhor */
+    /* 3. Ajustes finos para os elementos internos */
     .main-header h1 { font-size: 1.2em; }
     .main-header .header-link { font-size: 0.9em; }
     .header-controls-right { gap: 15px; }
 
-    /* Ajustes no rodapé de controles */
     #controls-footer {
         flex-direction: column;
         align-items: center;
