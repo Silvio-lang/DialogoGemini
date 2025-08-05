@@ -354,4 +354,25 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
         align-items: center;
         gap: 15px;
     }
+
+}
+/* ================================================================ */
+/*     CÓDIGO DE DEPURAÇÃO FINAL - ADICIONAR AO FINAL DO CSS       */
+/* ================================================================ */
+
+@media (max-width: 768px) {
+    body {
+        background-color: limegreen !important; /* Pinta o fundo de verde-limão */
+        display: block !important;
+    }
+
+    #app-container {
+        width: 100% !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border: 5px solid yellow !important; /* Adiciona uma borda amarela grossa */
+    }
 }
