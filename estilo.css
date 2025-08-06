@@ -354,4 +354,28 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
         align-items: center;
         gap: 15px;
     }
+
+}
+
+/* ================================================================ */
+/*     MELHORIAS DE USABILIDADE MOBILE (ADICIONAR AO FINAL)         */
+/* ================================================================ */
+
+@media (max-width: 768px) {
+    /* Aumenta a altura dos inputs e textareas na sidebar para facilitar o toque */
+    #tools-sidebar #conversation-name-input,
+    #tools-sidebar #system-prompt-input {
+        min-height: 44px; /* Garante uma altura mínima para o toque */
+        padding-top: 12px;
+        padding-bottom: 12px;
+        font-size: 16px; /* Aumenta o tamanho da fonte para melhor legibilidade */
+    }
+
+    /* Aumenta a altura dos botões na sidebar */
+    #tools-sidebar .sidebar-btn {
+        min-height: 44px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        font-size: 16px;
+    }
 }
