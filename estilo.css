@@ -1,0 +1,432 @@
+/* ================================================================ */
+/* ESTILO.CSS - VERSÃO FINAL COM CORREÇÃO DEFINITIVA PARA MOBILE    */
+/* ================================================================ */
+
+/* --- 1. ESTILOS GERAIS E DE CONTENÇÃO (PARA DESKTOP) --- */
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5;
+}
+
+body {
+    /* Este é o comportamento para DESKTOP: centralizar o app-container */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- 2. ESTRUTURA PRINCIPAL DA APLICAÇÃO --- */
+#app-container {
+    width: 100%;
+    max-width: 650px;
+    height: 95vh;
+    max-height: 880px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #4a90e2;
+    color: white;
+    flex-shrink: 0;
+}
+
+.main-header h1 {
+    margin: 0;
+    font-size: 1.4em;
+}
+
+.main-header .header-link {
+    text-decoration: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.main-header .header-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.tools-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.8em;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 20px 0 20px;
+    overflow: hidden;
+}
+
+#chat-window {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 10px;
+}
+
+footer {
+    padding: 10px 15px;
+    border-top: 1px solid #dcdfe5;
+    flex-shrink: 0;
+}
+
+
+/* --- 3. MENSAGENS DO CHAT --- */
+.message {
+    position: relative;
+    max-width: 85%;
+    padding: 10px 15px;
+    padding-right: 35px;
+    border-radius: 18px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    font-size: 1em;
+}
+
+.message p {
+    margin: 0;
+}
+
+.gemini-message {
+    background-color: #e9e9eb;
+    color: #000;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.user-message {
+    background-color: #007bff;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+.delete-message-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 1.1em;
+    color: #999;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.message:hover .delete-message-btn {
+    opacity: 1;
+}
+.delete-message-btn:hover {
+    color: #dc3545;
+}
+
+
+/* --- 4. CONTROLES DO RODAPÉ (PROMPT E OUTROS) --- */
+#prompt-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#user-input {
+    flex-grow: 1;
+    padding: 12px 18px;
+    border: 1px solid #ccc;
+    border-radius: 22px;
+    font-size: 1em;
+    resize: none;
+    overflow-y: hidden;
+    min-height: 24px;
+    max-height: 120px;
+}
+
+#user-input:focus {
+    outline: none;
+    border-color: #4A90E2;
+}
+
+#user-input:disabled {
+    background-color: #f5f5f5;
+}
+
+#controls-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+#controls-left, #controls-center {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#open-assistant-link {
+    color: #4A90E2;
+    text-decoration: none;
+}
+#open-assistant-link:hover {
+    text-decoration: underline;
+}
+
+#context-meter-container {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+#speed-control-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555;
+    font-size: 0.9em;
+}
+
+/* --- 5. BOTÕES (GERAL) --- */
+.send-level-btn, #toggle-search-btn, #clear-prompt-btn, #search-btn, #clear-search-btn {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid #ccc;
+    color: #555;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.send-level-btn {
+    background-color: #4A90E2;
+    border-color: #4A90E2;
+    color: white;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+.send-level-btn:hover {
+    background-color: #357ABD;
+}
+.send-level-btn:disabled {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+#toggle-search-btn:hover, #clear-prompt-btn:hover {
+    border-color: #4A90E2;
+}
+#toggle-search-btn.active {
+    background-color: #e0eaf6;
+    border-color: #4A90E2;
+}
+
+#clear-prompt-btn {
+    border: none;
+}
+
+#search-btn, #clear-search-btn {
+    padding: 10px 20px;
+    width: auto;
+    border-radius: 20px;
+    font-size: 1em;
+    color: white;
+}
+#search-btn { background-color: #28a745; }
+#clear-search-btn { background-color: #6c757d; }
+
+
+/* --- 6. INDICADORES E MODAIS --- */
+#loading-indicator { display: flex; justify-content: center; align-items: center; padding: 10px 0; }
+.spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: #4A90E2; animation: spin 1s ease infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+#continue-container { padding: 10px 20px; text-align: center; }
+#continue-btn { padding: 10px 25px; background-color: #28a745; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 0.9em; }
+#continue-btn:hover { background-color: #218838; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); width: 90%; max-width: 500px; text-align: center; }
+.modal-content h2, .modal-content h3 { margin-top: 0; color: #333; }
+.modal-content p { color: #666; margin-bottom: 20px; }
+.modal-buttons { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.modal-btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; flex-grow: 1; }
+.modal-btn.cancel { background-color: #6c757d; }
+.modal-btn.discard { background-color: #dc3545; }
+.modal-btn.save { background-color: #28a745; }
+
+
+/* --- 7. SIDEBAR DE FERRAMENTAS --- */
+.sidebar { height: 100%; width: 400px; max-width: 85%; position: fixed; top: 0; right: -420px; background-color: #f8f9fa; box-shadow: -2px 0 8px rgba(0,0,0,0.15); z-index: 1001; display: flex; flex-direction: column; transition: right 0.3s ease-in-out; }
+.sidebar.open { right: 0; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #e9ecef; border-bottom: 1px solid #dee2e6; }
+.sidebar-header h2 { margin: 0; font-size: 1.2em; color: #343a40; }
+.close-btn { background: none; border: none; font-size: 2em; color: #6c757d; cursor: pointer; }
+.sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; box-sizing: border-box; }
+.tool-section { margin-bottom: 20px; }
+.tool-section h3 { font-size: 1em; color: #495057; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
+hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
+#tools-sidebar textarea, #tools-sidebar input[type="text"] { width: 100%; box-sizing: border-box; }
+
+.sidebar-btn { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; text-align: center; }
+.sidebar-btn:hover { background-color: #0056b3; }
+#saved-conversations-list { max-height: 45vh; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; background-color: #fff; }
+.saved-conversation-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1px solid #e9ecef; gap: 10px; }
+.conversation-info .name { display: block; font-size: 0.9em; font-weight: bold; }
+.conversation-info .timestamp { display: block; font-size: 0.75em; color: #6c757d; }
+.conversation-actions button { border: none; padding: 6px 10px; margin-left: 6px; border-radius: 4px; cursor: pointer; font-size: 0.8em; color: white; }
+.load-btn { background-color: #28a745; }
+.delete-btn { background-color: #dc3545; }
+.tool-description { font-size: 0.8em; color: #6c757d; margin-top: -10px; margin-bottom: 15px; }
+.sidebar-link { display: block; padding: 8px 0; color: #007bff; text-decoration: none; font-size: 0.9em; }
+.sidebar-link:hover { text-decoration: underline; }
+
+/* --- 8. CLASSES UTILITÁRIAS --- */
+.hidden { display: none !important; }
+#click-plug-to-support { display: none !important; }
+
+/* ================================================================ */
+/* 9. REGRAS RESPONSIVAS - VERSÃO CORRIGIDA E DEFINITIVA            */
+/* ================================================================ */
+@media (max-width: 768px) {
+
+    /* 1. Reseta o body para parar de centralizar o conteúdo */
+    body {
+        display: block; /* Remove o display:flex e o alinhamento */
+    }
+
+    /* 2. Força o app-container a ocupar a tela inteira */
+    #app-container {
+        width: 100%;
+        height: 100vh;      /* Ocupa 100% da altura da viewport */
+        max-width: none;    /* Anula a regra de largura máxima do desktop */
+        max-height: none;   /* Anula a regra de altura máxima do desktop */
+        border-radius: 0;   /* Remove as bordas para visual de tela cheia */
+        box-shadow: none;     /* Remove a sombra */
+    }
+
+    /* 3. Ajustes finos para os elementos internos */
+    .main-header h1 { font-size: 1.2em; }
+    .main-header .header-link { font-size: 0.9em; }
+    .header-controls-right { gap: 15px; }
+
+    #controls-footer {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+}
+
+/* ================================================================ */
+/*     MELHORIAS DE USABILIDADE MOBILE (ADICIONAR AO FINAL)         */
+/* ================================================================ */
+
+@media (max-width: 768px) {
+    /* Aumenta a altura dos inputs e textareas na sidebar para facilitar o toque */
+    #tools-sidebar #conversation-name-input,
+    #tools-sidebar #system-prompt-input {
+        min-height: 44px; /* Garante uma altura mínima para o toque */
+        padding-top: 12px;
+        padding-bottom: 12px;
+        font-size: 16px; /* Aumenta o tamanho da fonte para melhor legibilidade */
+    }
+
+    /* Aumenta a altura dos botões na sidebar */
+    #tools-sidebar .sidebar-btn {
+        min-height: 44px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        font-size: 16px;
+    }
+}
+.file-display {
+    color: #888;
+    font-size: 0.8em;
+    margin-right: 15px;
+    font-style: italic;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+/* ================================================================ */
+/* ESTILO PARA EXIBIÇÃO DO NOME DO ARQUIVO NA SIDEBAR               */
+/* ================================================================ */
+.file-display-sidebar {
+    display: block; /* Ocupa sua própria linha */
+    background-color: #f0f0f0; /* Fundo sutil para destacar */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-bottom: 15px; /* Espaço antes dos botões */
+    
+    color: #333;
+    font-size: 0.9em;
+    font-style: italic;
+    
+    /* Permite rolar para ver nomes de arquivos longos */
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    /* Estilização da barra de rolagem (opcional, mas melhora a aparência) */
+    scrollbar-width: thin;
+    scrollbar-color: #aaa #f0f0f0;
+}
+
+.file-display-sidebar::-webkit-scrollbar {
+    height: 4px;
+}
+
+.file-display-sidebar::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.file-display-sidebar::-webkit-scrollbar-thumb {
+    background: #aaa;
+    border-radius: 2px;
+}
+
+.file-display-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
