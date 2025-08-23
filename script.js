@@ -426,7 +426,7 @@ async function callAnalysisAPI(instruction, analysisType) {
     
     async function runWelcomeTour() {
         // Implementação simplificada do tour com a nova arquitetura
-        const tourSteps = ["👋 Olá! Bem-vindo ao **DiálogoGemini!** Aqui, buscamos dar a você uma experiência confortável e fluente de conversa com a IA Gemini.", "A resposta é apresentada gradualmente, podendo interromper a qualquer momento, digitando-se um novo prompt, ou aguardar as pausas para continuar.", "Proure mais informações no 'Assistente'. ","Vamos lá? Digite seu primeiro prompt."];
+        const tourSteps = ["👋 Olá! Bem-vindo ao **DiálogaGemini!** Aqui, buscamos dar a você uma experiência confortável e fluente na conversa com a IA do Google.", "As resposta são apresentadas gradualmente, podendo ser interrompidas a qualquer momento digitando-se um novo prompt, ou seguir clicando 'Continuar'.", "Informações mais detalhadas no 'Assistente'. ","Vamos lá! Digite seu prompt, abaixo ⏬."];
         ui.lockInput();
         elements.chatWindow.innerHTML = '';
         startResponseDisplay(tourSteps.join('\n\n')); // Usa a nova máquina de estado para o tour
@@ -686,3 +686,4 @@ async function callAnalysisAPI(instruction, analysisType) {
     initializeApp();
 
 });
+
