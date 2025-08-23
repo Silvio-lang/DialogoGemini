@@ -418,9 +418,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
 async function runWelcomeTour() {
     const tourStepsText = [
-        "👋 Olá! Este é o *DiálogoGemini!*  Aqui, a idéia é dar a você uma experiência tranquila e fluente de conversa, e também um método de registro e salvamento organizado das conversas com a IA sobre os diversos assuntos.",
+        "👋 Olá! Este é o *DiálogoGemini!*  Aqui, a idéia é dar a você uma experiência tranquila e fluente de conversação, e também um método de registro e salvamento organizado das conversas com a IA sobre os diversos assuntos.",
         "A resposta é apresentada gradualmente, podendo ser interrompida a qualquer momento por você ou continuar após as pausas, clicando em Continuar.",
-        "Vamos lá! Digite seu prompt, ou obtenha mais instruções, clicando abaixo em '🤓 Ajuda' ou na ⚙️' acima para abrir as Ferramentas"
+        "Vamos lá! Digite seu prompt, ou obtenha mais instruções, clicando abaixo em '🤓 Ajuda I.A.' ou na '⚙️' acima para abrir as Ferramentas"
     ].join('\n\n');
 
     // Garante que qualquer digitação anterior pare.
@@ -713,4 +713,5 @@ async function runWelcomeTour() {
 
     // --- EXECUÇÃO INICIAL ---
     initializeApp();
+
 });
