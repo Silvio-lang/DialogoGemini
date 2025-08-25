@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tourStepsText = [
             "👋 Olá! Este é o *DiálogoGemini!*  Aqui, a idéia é dar a você uma experiência tranquila e fluente de conversa, e também um método de registro e salvamento organizado das conversas com a IA sobre os diversos assuntos abordados.",
             "As respostas são apresentadas gradualmente, podendo ser interrompidas a qualquer momento por você com um novo peidido, ou continuar após a leitura dos blocos, clicando em Continuar.",
-            "Vamos lá! Digite seu prompt, ou obtenha mais instruções, clicando abaixo em '🤓 Ajuda' ou na ⚙️' acima para abrir as Ferramentas"
+            "Vamos lá! Digite seu prompt, ou obtenha mais instruções, clicando abaixo em '🤓 Ajuda I.A' ou na ⚙️' acima à direita para abrir o SideBar com Ferramentas"
         ].join('\n\n');
 
         stopTypingFlag = true; 
@@ -736,4 +736,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- EXECUÇÃO INICIAL ---
     initializeApp();
+
 });
