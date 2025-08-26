@@ -1,8 +1,8 @@
 ## DialogaGemini (Chat e gestão do conhecimento)
 
-## 1\. Visão Geral do Projeto
+## 1\. Visão Geral
 
-* **O que é:** O DialogaGemini é um aplicativo de chat com IA, projetado para ser fluente, controlável e personalizável.
+* **O que é:** O ___DialogaGemini___ é um aplicativo de chat com IA, projetado para ser fluente, controlável e personalizável.
 * **Objetivo Principal:** Dar ao usuário controle total sobre:
   * O contexto da conversa.
   * A personalidade do assistente.
@@ -78,5 +78,6 @@
 * **Análise por IA:** O "Analisador de Conversa" na sidebar pode gerar resumos automáticos em vários níveis, facilitando a revisão de conversas longas.
 * **Conversão de toda a conversa em arquivo:** Receba na sua pasta de downloads um arquivo formatado 'MarkDown' para compartilhamento.
 * **Apresentação em pop-up deste Manual de instruções**
+
 
 
