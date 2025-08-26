@@ -1,4 +1,4 @@
-# Base de Conhecimento: DialogaGemini (Fonte de Dados Técnicos)
+## DialogaGemini (Chat e gestão do conhecimento)
 
 ## 1\. Visão Geral do Projeto
 
@@ -29,37 +29,33 @@
 * ___**Campo de Prompt Dinâmico:**___
   * **Descrição:** A área para digitar as mensagens é um campo de texto que cresce verticalmente conforme o usuário digita.
   * **Limpar Prompt (ícone 🧹):** Um ícone de "vassoura" aparece durante a digitação para limpar o campo de texto instantaneamente.
-* ___**Guia Inicial:**___
-  * **Localização:** Link no rodapé.
-  * **Função:** Inicia um tour guiado pelas funcionalidades do aplicativo.
+  * **3 tipos de ENTER: para respostas curtas (1) médias (2) ou livres (3)
 * ___**Slider de Velocidade:**___
   * **Localização:** No rodapé.
   * **Função:** Permite ajustar a velocidade com que o texto da IA é exibido palavra por palavra na tela.
-* ___**Assistente de Projeto (ícone ❓):**___
-  * **Função:** É você. Abre este chat de ajuda para tirar dúvidas sobre o projeto.
 * ___**Nova Conversa:**___
   * **Função:** Limpa a janela do chat e inicia uma nova conversa do zero.
 * ___**Medidor de Contexto:**___
   * **Localização:** Canto inferior direito.
-  * **Função:** Exibe o tamanho aproximado da conversa atual em "tokens". Ajuda a monitorar o "reboque" de dados enviados à API, que pode afetar a velocidade da conversa.
-  * 
+  * **Função:** Exibe o tamanho aproximado da conversa atual em "tokens". Ajuda a monitorar o "volume" de dados enviados à API, que pode afetar a velocidade da conversa.
+  * obs.: conversas muito grandes sobrecarregam o navegador. Use maiores memórias RAM. 
 ### 2.2. Sidebar de Ferramentas (ícone ⚙️)
 * ___**Instrução Base:**___
   * **Função:** Campo de texto editável para definir o comportamento do assistente para a conversa (ex: "aja como um professor...").
   * **Regra:** Instruções dadas nos prompts da conversa prevalecem sobre esta instrução base.
 * ___**Gravação de Acesso Rápido:**___
   * **Função:** Salva a conversa atual no navegador do usuário com um nome personalizado.
-  * **Finalidade:** Facilita continuar conversas rapidamente sem gerenciar arquivos. (perde-se ao reiniciar navegador)
+  * **Finalidade:** Facilita continuar conversas rapidamente sem gerenciar arquivos. (perdem-se ao reiniciar o navegador)
 * ___**Backup / Transferência (Arquivos):**___
   * **Importar de Arquivo (.json):** Carrega um histórico de conversa a partir de um arquivo `.json` do dispositivo do usuário.
-  * **Exportar para Backup (.json):** Salva a conversa atual em um arquivo `.json` na pasta de Downloads. Serve como backup completo e é portável para outros usuários ou dispositivos.
+  * **Exportar para Backup (.json):** Salva a conversa atual em um arquivo `.json` na pasta de Downloads. Serve como backup completo e é portável para outros usuários ou dispositivos. Procure usar armazenamento em nuvem.
   * **Exportar para Leitura (.md):** Salva a conversa em um arquivo de texto formatado (Markdown), ideal para leitura, documentação ou conversão para PDF.
 * ___**Configurações:**___
   * **Função:** Permite ao usuário inserir ou alterar sua chave da API do Google Gemini.
 * ___**Analisador da Conversa:**___
   * **Função:** Permite ao usuário solicitar à IA que gere diferentes tipos de resumos da conversa atual. O resultado é adicionado ao final do chat.
-  * **Nível 1 (Título):** Cria um título curto.
-  * **Nível 2 (Tópicos):** Lista os pontos-chave.
+  * **Nível 1 (Título):** Cria um título curto. Útil para definir nome para salvar arquivo.
+  * **Nível 2 (Tópicos):** Lista os pontos-chave. Dá uma visão rápida doque foi a conversa.
   * **Nível 3 (Resumo Simples):** Lista os pontos-chave com uma breve descrição.
   * **Nível 4 (Resumo Detalhado):** Cria um resumo organizado em parágrafos.
 
@@ -75,7 +71,12 @@
 
 ## 4\. Principais Diferenciais do DialogaGemini
 * **Controle de Resposta:** O usuário pode escolher o nível de resumo da resposta (botões 1, 2, 3) a cada prompt.
+* **Apresentação das respostas em blocos** O usuário pode escolher: Resposta Única ou em Blocos (aguardando 'Continuar' pelo usuário)
+* **Interrupção da resposta** O usuário pode suspender a resposta durante a espera por 'Continuar', quando pode ser feito novo prompt.
 * **Gestão de Conhecimento:** Facilita salvar e nomear conversas, criando um acervo pessoal de conhecimento que pode ser consultado e continuado no futuro.
 * **Otimização de Contexto:** Permite a remoção de mensagens com a lixeira `🗑️` para manter a conversa ágil e focada.
 * **Análise por IA:** O "Analisador de Conversa" na sidebar pode gerar resumos automáticos em vários níveis, facilitando a revisão de conversas longas.
+* **Conversão de toda a conversa em arquivo:** Receba na sua pasta de downloads um arquivo formatado 'MarkDown' para compartilhamento.
+* **Apresentação em pop-up deste Manual de instruções**
+
 
