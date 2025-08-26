@@ -4,10 +4,10 @@
 
 * **O que é:** O ___DialogaGemini___ é um aplicativo de chat com IA, projetado para ser fluente, controlável e personalizável.
 * **Objetivo Principal:** Dar ao usuário controle total sobre:
-  * O contexto da conversa.
-  * A personalidade do assistente.
-  * O gerenciamento dos históricos de chat.
-  * Velocidade de escrita das respostas.
+  * O tamanho do contexto da conversa (em tokens).
+  * A personalidade do assistente (Instrução Base).
+  * O gerenciamento dos históricos de chat (Gravação e Backup).
+  * Velocidade de escrita das respostas (ajuste linear).
 * **Foco:** Usabilidade em dispositivos móveis.
 * **Tecnologia:** Utiliza a API do Google Gemini.
 * **Requisito:** É necessária uma chave de API, que pode ser obtida no portal `https://aistudio.google.com/app/apikey`.
@@ -25,7 +25,9 @@
   * **Nível 1:** Resposta mais resumida (aprox. 400-600 caracteres).
   * **Nível 2:** Resposta de tamanho médio (aprox. 1000-1400 caracteres).
   * **Nível 3:** Resposta livre, sem limite de tamanho.
-
+* ___**Resposta Unica ou em Blocos:**___
+  * **Bloco Único:** apresenta a resposta sem aguardar o 'Continuar'.
+  * **Em Blocos:** Respostas pausadas em finais de parágrafo ou em ponto (.) de frase caso o parágrafo seja muito grande. Aguarda 'Continuar'.
 * ___**Campo de Prompt Dinâmico:**___
   * **Descrição:** A área para digitar as mensagens é um campo de texto que cresce verticalmente conforme o usuário digita.
   * **Limpar Prompt (ícone 🧹):** Um ícone de "vassoura" aparece durante a digitação para limpar o campo de texto instantaneamente.
@@ -78,6 +80,7 @@
 * **Análise por IA:** O "Analisador de Conversa" na sidebar pode gerar resumos automáticos em vários níveis, facilitando a revisão de conversas longas.
 * **Conversão de toda a conversa em arquivo:** Receba na sua pasta de downloads um arquivo formatado 'MarkDown' para compartilhamento.
 * **Apresentação em pop-up deste Manual de instruções**
+
 
 
 
