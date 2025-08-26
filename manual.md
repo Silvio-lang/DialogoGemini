@@ -73,13 +73,14 @@
 
 ## 4\. Principais Diferenciais do DialogaGemini
 * **Controle de Resposta:** O usuário pode escolher o nível de resumo da resposta (botões 1, 2, 3) a cada prompt.
-* **Apresentação das respostas em blocos** O usuário pode escolher: Resposta Única ou em Blocos (aguardando 'Continuar' pelo usuário)
+* **Apresentação das respostas em blocos:** O usuário pode escolher: Resposta Única ou em Blocos (aguardando 'Continuar' pelo usuário)
 * **Interrupção da resposta** O usuário pode suspender a resposta durante a espera por 'Continuar', quando pode ser feito novo prompt.
 * **Gestão de Conhecimento:** Facilita salvar e nomear conversas, criando um acervo pessoal de conhecimento que pode ser consultado e continuado no futuro.
 * **Otimização de Contexto:** Permite a remoção de mensagens com a lixeira `🗑️` para manter a conversa ágil e focada.
 * **Análise por IA:** O "Analisador de Conversa" na sidebar pode gerar resumos automáticos em vários níveis, facilitando a revisão de conversas longas.
 * **Conversão de toda a conversa em arquivo:** Receba na sua pasta de downloads um arquivo formatado 'MarkDown' para compartilhamento.
 * **Apresentação em pop-up deste Manual de instruções**
+
 
 
 
