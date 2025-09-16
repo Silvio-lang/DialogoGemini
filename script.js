@@ -716,6 +716,8 @@ document.addEventListener('DOMContentLoaded', () => {
         addSafeEventListener(elements.analyzeSummaryBtn, 'click', () => { callAnalysisAPI("Liste os tópicos da conversa a seguir e adicione uma descrição curta (uma frase) para cada um.", "Resumo dos Tópicos"); });
         addSafeEventListener(elements.analyzeDetailedBtn, 'click', () => { callAnalysisAPI("Gere um resumo detalhado, em parágrafos, conectando as ideias da conversa a seguir.", "Resumo Detalhado"); });
         addSafeEventListener(elements.clearPromptBtn, 'click', () => { elements.userInput.value = ''; elements.clearPromptBtn.classList.add('hidden'); elements.sendLevel1Btn.disabled = true; elements.sendLevel2Btn.disabled = true; elements.sendLevel3Btn.disabled = true; elements.userInput.style.height = 'auto'; elements.userInput.focus(); });
+
+        addSafeEventListener(window, 'beforeunload', saveActiveConversation);
         
         setupSystemPrompt();
         setupSpeedControl();
@@ -736,4 +738,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // --- EXECUÇÃO INICIAL ---
     initializeApp();
+
 });
