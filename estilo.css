@@ -511,9 +511,9 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
 .toggle-switch-label.main-toggle-label {
     display: flex;
     align-items: center;
-    gap: 6px; /* Ajustei um pouco o gap, mas você pode manter 8px se preferir */
-    margin-right: 50px; /* Adiciona um pequeno espaço entre ele e os botões de nível */
-    margin-left: 50px; /* Adiciona um pequeno espaço entre ele e o clipe */
+    gap: 3px; /* Ajustei um pouco o gap, mas você pode manter 8px se preferir */
+    margin-right: 30px; /* Adiciona um pequeno espaço entre ele e os botões de nível */
+    margin-left: 30px; /* Adiciona um pequeno espaço entre ele e o clipe */
     /* Outros estilos de alinhamento para a linha do prompt, se necessário */
 }
 
