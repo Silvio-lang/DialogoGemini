@@ -156,7 +156,7 @@ footer {
 /* --- 4. CONTROLES DO RODAPÉ (PROMPT E OUTROS) --- */
 #prompt-container {
     display: flex;
-    align-items: flex-end; /* Alterado para alinhar o textarea na base */
+    align-items: flex-end; /* Alinha itens na base */
     gap: 10px;
 }
 
@@ -185,16 +185,32 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 15px; /* Ajustada a margem para separar do prompt-container */
+    margin-top: 15px;
     flex-wrap: wrap;
     gap: 15px;
 }
 
-/* Removido #controls-center, pois não está mais no HTML */
 #controls-left {
     display: flex;
     align-items: center;
-    gap: 15px; /* Espaçamento entre os botões de lupa e clipe */
+    /* O gap principal agora estará dentro do context-meter ou do action-controls-right */
+}
+
+#context-meter {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: 5px; /* Pequeno espaço entre os controles da esquerda e o medidor de contexto */
+}
+
+#controls-right {
+    display: flex;
+    align-items: center;
+}
+
+#action-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaço entre os grupos de botões (Lupa/Clipe/Níveis) */
 }
 
 #open-assistant-link {
@@ -205,19 +221,13 @@ footer {
     text-decoration: underline;
 }
 
-#context-meter-container {
-    font-size: 0.8em;
-    color: #6c757d;
-}
-
-/* Removido #speed-control-container, pois foi movido */
-
 
 /* --- 5. BOTÕES (GERAL) --- */
-.send-level-btn, #clear-prompt-btn, #search-btn, #clear-search-btn { /* Removidos #toggle-search-btn e #attach-file-btn daqui */
+/* ... (Manter estilos de .send-level-btn, #toggle-search-btn, #clear-prompt-btn, #search-btn, #clear-search-btn) ... */
+.send-level-btn, #clear-prompt-btn, #search-btn, #clear-search-btn {
     flex-shrink: 0;
     background: none;
-    border: 1px solid #ccc; /* Mantido para .send-level-btn, etc. */
+    border: 1px solid #ccc;
     color: #555;
     width: 44px;
     height: 44px;
@@ -248,11 +258,13 @@ footer {
     cursor: not-allowed;
 }
 
-/* Removido #toggle-search-btn:hover daqui, agora usa .control-footer-btn:hover */
-#clear-prompt-btn:hover {
+#toggle-search-btn:hover, #clear-prompt-btn:hover {
     border-color: #4A90E2;
 }
-/* Removido #toggle-search-btn.active daqui, agora usa .control-footer-btn.active */
+#toggle-search-btn.active {
+    background-color: #e0eaf6;
+    border-color: #4A90E2;
+}
 
 #clear-prompt-btn {
     border: none;
@@ -270,6 +282,7 @@ footer {
 
 
 /* --- 6. INDICADORES E MODAIS --- */
+/* ... (Manter estilos de #loading-indicator, .spinner, #continue-container, .modal-overlay, etc. - MANTENHA) ... */
 #loading-indicator { display: flex; justify-content: center; align-items: center; padding: 10px 0; }
 .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: #4A90E2; animation: spin 1s ease infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -290,6 +303,7 @@ footer {
 
 
 /* --- 7. SIDEBAR DE FERRAMENTAS --- */
+/* ... (Manter todos os estilos da seção .sidebar, .sidebar-header, etc. - MANTENHA) ... */
 .sidebar { height: 100%; width: 400px; max-width: 85%; position: fixed; top: 0; right: -420px; background-color: #f8f9fa; box-shadow: -2px 0 8px rgba(0,0,0,0.15); z-index: 1001; display: flex; flex-direction: column; transition: right 0.3s ease-in-out; }
 .sidebar.open { right: 0; }
 .sidebar-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background-color: #e9ecef; border-bottom: 1px solid #dee2e6; }
@@ -297,7 +311,7 @@ footer {
 .close-btn { background: none; border: none; font-size: 2em; color: #6c757d; cursor: pointer; }
 .sidebar-content { padding: 20px; overflow-y: auto; flex-grow: 1; box-sizing: border-box; }
 .tool-section { margin-bottom: 20px; }
-.tool-section h3 { font-size: 1em; color: #495057; margin-top: 0; margin-bottom: 10px; /* Ajustado */ border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
+.tool-section h3 { font-size: 1em; color: #495057; margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
 hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
 #tools-sidebar textarea, #tools-sidebar input[type="text"] { width: 100%; box-sizing: border-box; }
 
@@ -344,9 +358,28 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
     .header-controls-right { gap: 15px; }
 
     #controls-footer {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
+        flex-direction: row; /* Mantém em linha para desktop/mobile */
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #controls-left-and-context {
+        flex-direction: row; /* Mantém os controles e o contexto na mesma linha horizontal */
+        justify-content: flex-start;
+        gap: 15px; 
+    }
+    
+    #controls-left {
+        gap: 8px; 
+    }
+    
+    #context-meter {
+        margin-top: 0; 
+    }
+    
+    #controls-right {
+        align-self: center; 
     }
 }
 
@@ -371,12 +404,292 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
         padding-bottom: 12px;
         font-size: 16px;
     }
+    
+    /* Ajustes no footer para mobile */
+    #controls-footer {
+        flex-direction: column; /* Volta para coluna no mobile */
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #controls-left-and-context {
+        flex-direction: row; /* Na mesma linha */
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    #controls-left {
+        gap: 8px; 
+    }
 }
 /* ================================================================ */
 /* ESTILOS PARA UPLOAD DE IMAGEM (ADICIONADO) */
 /* ================================================================ */
 
-/* REMOVIDO: #attach-file-btn - seus estilos agora serão tratados por .control-footer-btn */
+#image-preview-container {
+    position: relative;
+    margin-left: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 3px;
+    background-color: #f8f9fa;
+}
+
+#image-preview {
+    max-height: 40px; /* Alinhado com a altura dos botões */
+    max-width: 100px;
+    display: block;
+    border-radius: 2px;
+}
+
+#remove-image-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 18px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* ================================================================ */
+/* NOVOS ESTILOS PARA O SIDEBAR: Controles de Chat                  */
+/* ================================================================ */
+
+.sidebar-control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px; /* Espaçamento entre os grupos de controle */
+}
+
+.sidebar-label {
+    color: #495057;
+    font-size: 0.9em;
+    white-space: nowrap; /* Evita que o texto quebre */
+}
+
+/* Estilo para o slider dentro do sidebar */
+#speed-slider-sidebar {
+    flex-grow: 1; /* Faz o slider ocupar o espaço disponível */
+    -webkit-appearance: none; /* Remove estilos padrão do navegador */
+    appearance: none;
+    height: 8px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+    border-radius: 4px;
+}
+
+#speed-slider-sidebar::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+
+#speed-slider-sidebar::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007bff;
+    cursor: pointer;
+}
+/* Estilos para o toggle switch "Bloco Único" na linha principal de prompt */
+.toggle-switch-label.main-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Ajustei um pouco o gap, mas você pode manter 8px se preferir */
+    margin-right: 50px; /* Adiciona um pequeno espaço entre ele e os botões de nível */
+    margin-left: 50px; /* Adiciona um pequeno espaço entre ele e o clipe */
+    /* Outros estilos de alinhamento para a linha do prompt, se necessário */
+}
+
+/* ================================================================ */
+/* NOVOS ESTILOS PARA OS BOTÕES DE LUPA, CLIPE E NÍVEIS NO FOOTER     */
+/* ================================================================ */
+
+.control-footer-btn {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid #ccc;
+    color: #555;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.control-footer-btn:hover {
+    border-color: #4A90E2;
+    color: #4A90E2; /* Mude a cor do ícone no hover */
+}
+
+.control-footer-btn.active {
+    background-color: #e0eaf6;
+    border-color: #4A90E2;
+}
+
+/* Estilos para os botões de nível (1, 2, 3) movidos para o footer (AGORA HORIZONTAL) */
+.send-level-group {
+    display: flex; /* MUDANÇA: Agora horizontal */
+    flex-direction: row; /* MUDANÇA: Agora horizontal */
+    gap: 6px; /* Espaço entre os botões 1, 2, 3 */
+}
+
+.level-btn {
+    width: 40px; /* Reduz ligeiramente a largura */
+    height: 30px; /* Reduz a altura */
+    border-radius: 8px; /* Bordas mais retas para os níveis */
+    font-size: 0.9em;
+    font-weight: normal;
+    padding: 0;
+    background-color: #e9ecef; /* Cor de fundo mais clara para os níveis */
+    border: 1px solid #ccc;
+    color: #495057;
+    flex-shrink: 0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.level-btn:disabled {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+/* Estilos para o toggle switch "Resposta Única" no rodapé */
+#controls-footer .toggle-switch-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85em;
+    color: #555;
+}
+
+#controls-footer .slider {
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+    background-color: #ccc;
+    border-radius: 10px;
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+/* ================================================================ */
+/* 9. REGRAS RESPONSIVAS - VERSÃO CORRIGIDA E DEFINITIVA            */
+/* ================================================================ */
+@media (max-width: 768px) {
+
+    /* 1. Reseta o body para parar de centralizar o conteúdo */
+    body {
+        display: block; /* Remove o display:flex e o alinhamento */
+    }
+
+    /* 2. Força o app-container a ocupar a tela inteira */
+    #app-container {
+        width: 100%;
+        height: 100vh;      /* Ocupa 100% da altura da viewport */
+        max-width: none;    /* Anula a regra de largura máxima do desktop */
+        max-height: none;   /* Anula a regra de altura máxima do desktop */
+        border-radius: 0;   /* Remove as bordas para visual de tela cheia */
+        box-shadow: none;     /* Remove a sombra */
+    }
+
+    /* 3. Ajustes finos para os elementos internos */
+    .main-header h1 { font-size: 1.2em; }
+    .main-header .header-link { font-size: 0.9em; }
+    .header-controls-right { gap: 15px; }
+
+    #controls-footer {
+        flex-direction: row; /* Mantém em linha para desktop/mobile */
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #controls-left-and-context {
+        flex-direction: row; /* Mantém os controles e o contexto na mesma linha horizontal */
+        justify-content: flex-start;
+        gap: 15px; 
+    }
+    
+    #controls-left {
+        gap: 8px; 
+    }
+    
+    #context-meter {
+        margin-top: 0; 
+    }
+    
+    #controls-right {
+        align-self: center; 
+    }
+}
+
+/* ================================================================ */
+/*     MELHORIAS DE USABILIDADE MOBILE (ADICIONAR AO FINAL)         */
+/* ================================================================ */
+
+@media (max-width: 768px) {
+    /* Aumenta a altura dos inputs e textareas na sidebar para facilitar o toque */
+    #tools-sidebar #conversation-name-input,
+    #tools-sidebar #system-prompt-input {
+        min-height: 44px; /* Garante uma altura mínima para o toque */
+        padding-top: 12px;
+        padding-bottom: 12px;
+        font-size: 16px; /* Aumenta o tamanho da fonte para melhor legibilidade */
+    }
+
+    /* Aumenta a altura dos botões na sidebar */
+    #tools-sidebar .sidebar-btn {
+        min-height: 44px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        font-size: 16px;
+    }
+    
+    /* Ajustes no footer para mobile */
+    #controls-footer {
+        flex-direction: column; /* Volta para coluna no mobile */
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #controls-left-and-context {
+        flex-direction: row; /* Na mesma linha */
+        justify-content: space-between;
+        width: 100%;
+    }
+    
+    #controls-left {
+        gap: 8px; 
+    }
+}
+/* ================================================================ */
+/* ESTILOS PARA UPLOAD DE IMAGEM (ADICIONADO) */
+/* ================================================================ */
 
 #image-preview-container {
     position: relative;
@@ -465,50 +778,4 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
     display: flex; /* Para alinhar o checkbox e o texto */
     align-items: center;
     gap: 8px; /* Espaço entre o slider e o texto */
-}
-
-/* ================================================================ */
-/* NOVOS ESTILOS PARA OS BOTÕES DE LUPA E CLIPE NO FOOTER           */
-/* ================================================================ */
-
-/* Estilos para #controls-left que agora contém os botões */
-#controls-left {
-    display: flex; /* Para alinhar a lupa e o clipe horizontalmente */
-    align-items: center;
-    gap: 10px; /* Espaço entre os botões */
-    /* Removido o estilo de 'gap' que estava duplicado na seção #controls-left, #controls-center */
-}
-
-/* Reutiliza o estilo base dos botões e faz pequenos ajustes */
-.control-footer-btn {
-    flex-shrink: 0;
-    background: none; /* Garante que não tenha fundo padrão */
-    border: 1px solid #ccc;
-    color: #555;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5em;
-    line-height: 1;
-    transition: all 0.2s;
-}
-
-.control-footer-btn:hover {
-    border-color: #4A90E2;
-    color: #4A90E2; /* Mude a cor do ícone no hover */
-}
-
-/* Adicionando estilo para a classe 'active' se o botão de busca estiver ativo */
-.control-footer-btn.active {
-    background-color: #e0eaf6;
-    border-color: #4A90E2;
-}
-
-/* Removendo o background-color do #attach-file-btn quando inativo, pois .control-footer-btn já fará isso */
-#attach-file-btn {
-    /* Não precisa mais de estilo específico, herdará de .control-footer-btn */
 }

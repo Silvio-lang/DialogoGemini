@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ================================================================
     const elements = {
         systemPromptInput: document.getElementById('system-prompt-input'),
-        sendLevelsContainer: document.getElementById('send-levels-container'),
         sendLevel1Btn: document.getElementById('send-level-1-btn'),
         sendLevel2Btn: document.getElementById('send-level-2-btn'),
         sendLevel3Btn: document.getElementById('send-level-3-btn'),
@@ -18,9 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingIndicator: document.getElementById('loading-indicator'),
         continueBtn: document.getElementById('continue-btn'),
         continueContainer: document.getElementById('continue-container'),
-        speedSlider: document.getElementById('speed-slider'),
         openSidebarBtn: document.getElementById('open-sidebar-btn'),
-        closeSidebarBtn: document.getElementById('close-sidebar-btn'),
+        closeSidebarBtn: document.getElementById('close-btn'), // CORREÇÃO: No HTML é 'close-btn'
         toolsSidebar: document.getElementById('tools-sidebar'),
         conversationNameInput: document.getElementById('conversation-name-input'),
         saveConversationBtn: document.getElementById('save-conversation-btn'),
@@ -41,6 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
         imagePreviewContainer: document.getElementById('image-preview-container'),
         imagePreview: document.getElementById('image-preview'),
         removeImageBtn: document.getElementById('remove-image-btn'),
+        // NOVO ELEMENTO TRANSFERIDO DO SIDEBAR
+        responseModeToggle: document.getElementById('response-mode-toggle'), // Novo ID para o checkbox principal
+        speedSliderSidebar: document.getElementById('speed-slider-sidebar')
     };
 
     // ================================================================
@@ -139,8 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function processNextQueueItem() {
         if (stopTypingFlag) { console.log("Exibição interrompida."); ui.unlockInput(); return; }
-        const singleBlockToggle = document.getElementById('single-block-toggle');
-        const isSingleBlockMode = singleBlockToggle ? singleBlockToggle.checked : false;
+        // ATUALIZADO: Referência ao novo checkbox principal
+        const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
 
         if (currentSentenceIndex >= currentParagraphSentences.length) {
             if (responseQueue.length === 0) { ui.unlockInput(); return; }
@@ -184,8 +185,8 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
         currentSentenceIndex++;
         sentenceCountSincePause++;
-        const singleBlockToggle = document.getElementById('single-block-toggle');
-        const isSingleBlockMode = singleBlockToggle ? singleBlockToggle.checked : false;
+        // ATUALIZADO: Referência ao novo checkbox principal
+        const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
         const isLastSentence = currentSentenceIndex >= currentParagraphSentences.length;
         const sentenceLimitReached = sentenceCountSincePause >= 3;
         if (sentenceLimitReached && !isLastSentence && !isSingleBlockMode) {
@@ -231,23 +232,22 @@ async function handleNewPrompt(level = 3) {
     let promptPrefix = "";
     switch (level) {
         case 1:
-            promptPrefix = "Responda objetivamente, de forma curta e direta: "; // Micro-mensagem para o nível 1
+            promptPrefix = "Responda objetivamente, de forma curta e direta: "; 
             break;
         case 2:
-            promptPrefix = "Se for possível, responda em no máximo 2 parágrafos, de forma concisa: "; // Micro-mensagem para o nível 2
+            promptPrefix = "Se for possível, responda em no máximo 2 parágrafos, de forma concisa: ";
             break;
         case 3:
         default:
-            promptPrefix = ""; // Sem micro-mensagem para o nível 3 (livre) ou default
+            promptPrefix = "";
             break;
     }
 
     // O conteúdo que será ENVIADO para a API (com prefixo, se houver)
     let contentToSendToAPI = userMessageText;
-    if (promptPrefix) { // Aplica o prefixo SE HOUVER, sempre no início
+    if (promptPrefix) { 
         contentToSendToAPI = promptPrefix + userMessageText;
     }
-    // Se só tem imagem, mas tem prefixo, o prefixo ainda vai para a API
     if (promptPrefix && !userMessageText) {
         contentToSendToAPI = promptPrefix;
     }
@@ -259,7 +259,7 @@ async function handleNewPrompt(level = 3) {
     ui.hideContinueBtn();
 
     // ================================================================
-    // MODIFICAÇÃO AQUI: Criar displayUserContent para o feedback visual
+    // FEEDBACK VISUAL (Com prefixos para níveis 1 e 2)
     // ================================================================
     let displayUserContent = userMessageText;
     let feedbackPrefix = "";
@@ -270,7 +270,6 @@ async function handleNewPrompt(level = 3) {
         case 2:
             feedbackPrefix = "  **2 parágrafos:**  ";
             break;
-        // Para level 3, não há feedback prefix na exibição do usuário
     }
 
     if (feedbackPrefix && userMessageText) {
@@ -298,7 +297,6 @@ async function handleNewPrompt(level = 3) {
         const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const messageParts = [];
-        // AQUI: Usamos contentToSendToAPI (com prefixo, se houver) para enviar à API
         if (contentToSendToAPI) {
             messageParts.push({ text: contentToSendToAPI });
         }
@@ -314,12 +312,10 @@ async function handleNewPrompt(level = 3) {
         const now = new Date();
         const formattedDateTime = now.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
         const userSystemPrompt = conversationHistory.systemPrompt || '';
-        // Ajustei a formatação da instrução crítica para garantir que ela funcione bem
         const finalSystemPrompt = `${userSystemPrompt}\n\n[Instrução Crítica: A data e hora de hoje são EXATAMENTE ${formattedDateTime}.]`.trim();
 
         const apiFormattedHistory = conversationHistory.messages.slice(0, -1).map(msg => ({
             role: msg.role === 'model' ? 'model' : 'user',
-            // Histórico antigo pode ter tido o feedbackPrefix, removemos para não poluir o histórico da API
             parts: [{ text: msg.content.replace(/  \*\*(Objetivamente|Máx\. 2 parágrafos):(?:\s*\*\/)?\s\*\*/g, '').replace(/\[Imagem anexada\]/g, '').trim() }]
         }));
 
@@ -366,19 +362,24 @@ async function handleNewPrompt(level = 3) {
         document.getElementById('remove-image-btn').click();
 
         if (!response.ok) {
-            const errorBody = await response.json();
-            throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`);
+            let errorDetail = response.statusText;
+            try {
+                const errorBody = await response.json();
+                errorDetail = errorBody.error.message || response.statusText;
+            } catch (e) {
+                // Ignora se não for JSON (ex: erro 500 puro)
+            }
+            throw new Error(`Erro da API (${response.status}): ${errorDetail}`);
         }
-
+        
         const data = await response.json();
+        
+        // VERIFICAÇÃO DE SEGURANÇA CRÍTICA
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || data.candidates[0].content.parts.length === 0) {
+            throw new Error("Resposta da API não contém texto de candidato válido.");
+        }
+        
         let fullResponseText = data.candidates[0].content.parts[0].text;
-
-        // ================================================================
-        // REMOÇÃO: Não adicionar mais a sinalização de nível aqui
-        // Isso foi movido para o displayUserContent de forma controlada.
-        // ================================================================
-        // fullResponseText = `  **(${level})**  ${fullResponseText}`; // Esta linha foi removida
-        // ================================================================
 
         const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() };
         conversationHistory.messages.push(modelMessage);
@@ -392,7 +393,6 @@ async function handleNewPrompt(level = 3) {
         displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model', new Date().toISOString());
         ui.hideLoading();
         ui.unlockInput();
-        document.getElementById('remove-image-btn').click();
     }
 }
     async function callAnalysisAPI(instruction, analysisType) {
@@ -420,7 +420,7 @@ async function handleNewPrompt(level = 3) {
                 throw new Error(`Erro da API: ${errorBody.error.message || response.statusText}`);
             }
             const data = await response.json();
-            const fullResponseText = data.candidates[0].content.parts[0].text;
+            let fullResponseText = data.candidates[0].content.parts[0].text;
             const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() };
             conversationHistory.messages.push(modelMessage);
             saveActiveConversation();
@@ -470,7 +470,6 @@ async function handleNewPrompt(level = 3) {
 
     function toggleSearchMode() {
         isSearchMode = !isSearchMode;
-        elements.sendLevelsContainer.classList.toggle('hidden', isSearchMode);
         elements.searchBtn.classList.toggle('hidden', !isSearchMode);
         elements.clearSearchBtn.classList.toggle('hidden', !isSearchMode);
         elements.toggleSearchBtn.classList.toggle('active', isSearchMode);
@@ -478,9 +477,10 @@ async function handleNewPrompt(level = 3) {
             elements.userInput.placeholder = "Localizar na conversa...";
             elements.clearPromptBtn.classList.add('hidden');
         } else {
-            elements.userInput.placeholder = "Digite sua mensagem aqui...";
+            elements.userInput.placeholder = "Digite sua mensagem ou anexe uma imagem...";
             clearSearch();
         }
+        elements.userInput.focus();
     }
     
     function setupSystemPrompt() {
@@ -658,7 +658,7 @@ async function handleNewPrompt(level = 3) {
         conversationHistory.messages.forEach(message => {
             const role = message.role === 'user' ? 'Usuário' : 'Assistente';
             const date = new Date(message.timestamp);
-            const formattedDateTime = date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            const formattedDateTime = date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             markdownContent += `**${role}** (*${formattedDateTime}*):\n\n${message.content}\n\n---\n\n`;
         });
         const defaultName = `conversa_${new Date().toISOString().split('T')[0]}.md`;
@@ -727,15 +727,25 @@ async function handleNewPrompt(level = 3) {
     }
     
     function setupSpeedControl() {
-        if (!elements.speedSlider) return;
+        // ATUALIZADO: Referência ao slider do sidebar
+        if (!elements.speedSliderSidebar) return;
         const savedSpeed = localStorage.getItem('typingSpeed');
         if (savedSpeed) {
             typingSpeed = parseInt(savedSpeed, 10);
-            elements.speedSlider.value = savedSpeed;
+            elements.speedSliderSidebar.value = savedSpeed;
         }
-        addSafeEventListener(elements.speedSlider, 'input', (e) => {
+        addSafeEventListener(elements.speedSliderSidebar, 'input', (e) => {
             typingSpeed = parseInt(e.target.value, 10);
             localStorage.setItem('typingSpeed', typingSpeed);
+        });
+        
+        // ATUALIZADO: Referência ao novo checkbox principal
+        const savedSingleBlock = localStorage.getItem('singleBlockMode');
+        if (elements.responseModeToggle) {
+            elements.responseModeToggle.checked = savedSingleBlock === 'true';
+        }
+        addSafeEventListener(elements.responseModeToggle, 'change', (e) => {
+             localStorage.setItem('singleBlockMode', e.target.checked);
         });
     }
 
@@ -763,12 +773,16 @@ async function handleNewPrompt(level = 3) {
         addSafeEventListener(elements.userInput, 'input', () => {
             const hasText = elements.userInput.value.length > 0;
             elements.clearPromptBtn.classList.toggle('hidden', !hasText);
-            elements.sendLevel1Btn.disabled = !hasText;
-            elements.sendLevel2Btn.disabled = !hasText;
-            elements.sendLevel3Btn.disabled = !hasText;
+            // Habilitar botões de envio apenas se tiver texto OU imagem anexada
+            const hasImage = attachedImage.base64 !== null;
+            elements.sendLevel1Btn.disabled = !hasText && !hasImage;
+            elements.sendLevel2Btn.disabled = !hasText && !hasImage;
+            elements.sendLevel3Btn.disabled = !hasText && !hasImage;
+            
             elements.userInput.style.height = 'auto';
             elements.userInput.style.height = `${elements.userInput.scrollHeight}px`;
         });
+        
         addSafeEventListener(elements.conversationNameInput, 'input', () => {
             if (localStorage.getItem(ACTIVE_CONVERSATION_KEY)) {
                 localStorage.setItem('activeConversationName', elements.conversationNameInput.value);
@@ -787,15 +801,17 @@ async function handleNewPrompt(level = 3) {
                 if (isSearchMode) {
                     performSearch();
                 } else {
-                    if (elements.userInput.value.trim().length > 0) {
+                    if (elements.userInput.value.trim().length > 0 || attachedImage.base64 !== null) {
                         handleNewPrompt(3);
                     }
                 }
             }
         });
+        // ATUALIZADO: Botões de nível estão no footer
         addSafeEventListener(elements.sendLevel1Btn, 'click', () => handleNewPrompt(1));
         addSafeEventListener(elements.sendLevel2Btn, 'click', () => handleNewPrompt(2));
         addSafeEventListener(elements.sendLevel3Btn, 'click', () => handleNewPrompt(3));
+        
         addSafeEventListener(elements.saveApiKeyBtn, 'click', saveApiKey);
         addSafeEventListener(elements.changeApiKeyLink, 'click', (e) => {
             e.preventDefault();
@@ -826,7 +842,7 @@ async function handleNewPrompt(level = 3) {
                 elements.toolsSidebar.classList.add('open');
             }
         });
-        addSafeEventListener(elements.closeSidebarBtn, 'click', () => {
+        addSafeEventListener(elements.closeSidebarBtn, 'click', () => { // CORREÇÃO: Usando 'close-btn' do HTML
             if (elements.toolsSidebar) {
                 elements.toolsSidebar.classList.remove('open');
             }
@@ -867,7 +883,7 @@ async function handleNewPrompt(level = 3) {
         addSafeEventListener(window, 'beforeunload', saveActiveConversation);
 
         setupSystemPrompt();
-        setupSpeedControl();
+        setupSpeedControl(); // Esta função agora cuida do novo checkbox principal
         setupImageUpload(); 
         checkApiKey();
     }

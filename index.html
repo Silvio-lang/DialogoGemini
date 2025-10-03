@@ -31,7 +31,7 @@
         <div class="tool-section"><h3>Backup / Transferência (Arquivos)</h3><p class="tool-description">Use para salvar um arquivo no seu computador.</p>
         <span id="file-name-display" class="file-display-sidebar"></span>
         <button id="import-conversation-btn" class="sidebar-btn">Importar de Arquivo (.json)</button><button id="export-json-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar para Backup (.json)</button><button id="export-md-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar para Leitura (.md)</button></div><hr>
-        <!-- NOVA SEÇÃO: CONTROLES DE CHAT (Movido do footer) -->
+        <!-- SEÇÃO DE CONTROLES DO SIDEBAR (SLIDER) -->
         <div class="tool-section">
             <h3>Controles de Chat</h3>
             <div class="sidebar-control-group">
@@ -90,40 +90,49 @@
         <div id="continue-container" class="hidden"><button id="continue-btn">Continuar</button></div>
     </main>
 
-    <footer>
+<footer>
        <div id="prompt-container">
-            <!-- Funcionalidade de Imagem (mantida, mas botões movidos para baixo) -->
-            <input type="file" id="image-input" accept="image/*" class="hidden">
-            <div id="image-preview-container" class="hidden">
-                <img id="image-preview" src="" alt="Pré-visualização da imagem">
-                <button id="remove-image-btn">×</button>
-            </div>
-
-            <textarea id="user-input" placeholder="Digite sua mensagem ou anexe uma imagem..." rows="1" disabled></textarea>
-            <button id="clear-prompt-btn" class="hidden" title="Limpar campo">🧹</button>
-            
-            <div id="send-levels-container">
-                <button id="send-level-1-btn" class="send-level-btn" title="Enviar para resposta curta" disabled>1</button>
-                <button id="send-level-2-btn" class="send-level-btn" title="Enviar para resposta média" disabled>2</button>
-                <button id="send-level-3-btn" class="send-level-btn" title="Enviar para resposta completa" disabled>3</button>
-            </div>
-            
-            <!-- BOTÕES DE BUSCA (ESCONDIDOS) RESTAURADOS -->
-            <button id="search-btn" class="hidden">Buscar</button>
-            <button id="clear-search-btn" class="hidden">Limpar</button>
-        </div>
+    
+        <!-- SOMENTE A CAIXA DE TEXTO E O BOTÃO DE LIMPAR -->
+        <textarea id="user-input" placeholder="Digite sua mensagem ou anexe uma imagem..." rows="1" disabled></textarea>
+        <button id="clear-prompt-btn" class="hidden" title="Limpar campo">🧹</button>
         
-        <div id="controls-footer">
-            <div id="controls-left">
-                <!-- BOTÕES DE LUPA E CLIPE REPOSICIONADOS AQUI -->
+        <!-- BOTÕES DE BUSCA (ESCONDIDOS) -->
+        <button id="search-btn" class="hidden">Buscar</button>
+        <button id="clear-search-btn" class="hidden">Limpar</button>
+
+    </div>
+        
+        <div id="controls-right">
+             <div id="action-controls-right">
+                <!-- ÍCONES DE AÇÃO GRANDE (LINHA DE BAIXO) -->
                 <button id="toggle-search-btn" title="Alternar para Busca" class="control-footer-btn">🔍</button>
                 <button id="attach-file-btn" title="Anexar Imagem" class="control-footer-btn">📎</button>
-            </div>
-            <div id="controls-right">
-                <span id="context-meter">Contexto: ~0 tokens</span>
+                
+                <!-- ELEMENTOS DE IMAGEM MOVIDOS PARA AQUI -->
+                <input type="file" id="image-input" accept="image/*" class="hidden">
+                <div id="image-preview-container" class="hidden">
+                    <img id="image-preview" src="" alt="Pré-visualização da imagem">
+                    <button id="remove-image-btn">×</button>
+                </div>
+                
+                <!-- CHECKBOX "BLOCO ÚNICO" INSERIDO AQUI -->
+                <label class="toggle-switch-label main-toggle-label" title="Alternar para resposta em bloco único, sem pausas">
+                    <input type="checkbox" id="response-mode-toggle">
+                    <span class="slider"></span>
+                    Bloco Único
+                </label>
+                
+                <!-- BOTÕES DE NÍVEL (1, 2, 3) NA HORIZONTAL -->
+                <div class="send-level-group">
+                    <button id="send-level-1-btn" class="level-btn" title="Enviar para resposta curta" disabled>1</button>
+                    <button id="send-level-2-btn" class="level-btn" title="Enviar para resposta média" disabled>2</button>
+                    <button id="send-level-3-btn" class="level-btn" title="Enviar para resposta completa" disabled>3</button>
+                </div>
             </div>
         </div>
     </footer>
+
 </div>
 
 <!-- SCRIPTS NO FINAL -->
