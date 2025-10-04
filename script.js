@@ -297,7 +297,7 @@ async function handleNewPrompt(level = 3) {
 
     try {
         const apiKey = localStorage.getItem('geminiApiKey');
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
 
         const messageParts = [];
         if (contentToSendToAPI) {
