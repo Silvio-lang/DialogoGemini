@@ -265,15 +265,18 @@ async function handleNewPrompt(level = 3) {
     let feedbackPrefix = "";
     switch (level) {
         case 1:
-            feedbackPrefix = "  **Objetivamente:**  ";
+            feedbackPrefix = "  _(resp. 1: curta)_  ";
             break;
         case 2:
-            feedbackPrefix = "  **2 parágrafos:**  ";
+            feedbackPrefix = "  _(resp. 2: média)_  ";
+            break;
+       case 3:
+            feedbackPrefix = "  _(resp. 3: livre)_  ";
             break;
     }
 
     if (feedbackPrefix && userMessageText) {
-        displayUserContent = feedbackPrefix + userMessageText;
+        displayUserContent = userMessageText + feedbackPrefix;
     } else if (feedbackPrefix && !userMessageText) {
         displayUserContent = feedbackPrefix + "[Imagem anexada]";
     } else if (!userMessageText && attachedImage.base64) {
