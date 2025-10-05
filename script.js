@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         continueBtn: document.getElementById('continue-btn'),
         continueContainer: document.getElementById('continue-container'),
         openSidebarBtn: document.getElementById('open-sidebar-btn'),
-        closeSidebarBtn: document.getElementById('close-btn'), // CORREÇÃO: No HTML é 'close-btn'
+        closeSidebarBtn: document.getElementById('close-sidebar-btn'), // CORREÇÃO: No HTML é 'close-btn'
         toolsSidebar: document.getElementById('tools-sidebar'),
         conversationNameInput: document.getElementById('conversation-name-input'),
         saveConversationBtn: document.getElementById('save-conversation-btn'),

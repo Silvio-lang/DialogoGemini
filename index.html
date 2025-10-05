@@ -2,8 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-<!--     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>DiálogoGemini</title>
 
     <script>
@@ -28,6 +27,9 @@
         <div class="tool-section"><h3>Instrução do Assistente (Persona)</h3><p class="tool-description">Defina o comportamento principal do assistente.</p><textarea id="system-prompt-input" rows="5" placeholder="Ex: Aja como um chef..."></textarea></div><hr>
         <div class="tool-section"><h3>Analisador de Conversa</h3><p class="tool-description">Gera resumos e extrai informações-chave da conversa atual.</p><button id="analyze-title-btn" class="sidebar-btn">Gerar Título</button><button id="analyze-topics-btn" class="sidebar-btn" style="margin-top: 10px;">Extrair Tópicos</button><button id="analyze-summary-btn" class="sidebar-btn" style="margin-top: 10px;">Tópicos com Descrição</button><button id="analyze-detailed-btn" class="sidebar-btn" style="margin-top: 10px;">Resumo Detalhado</button></div><hr>
         <div class="tool-section"><h3>Acesso Rápido (neste navegador)</h3><p class="tool-description">Salva um atalho da conversa na lista abaixo.</p><input type="text" id="conversation-name-input" placeholder="Dê um nome para o atalho..."><button id="save-conversation-btn" class="sidebar-btn">Salvar no Navegador</button></div><hr>
+
+<div class="tool-section"><h3>Contagem de Contexto</h3><p class="tool-description">Tokens enviados e recebidos na conversa atual.</p><div id="context-meter" style="font-weight: bold; color: #007bff;">Contexto: ~0 tokens</div></div><hr>
+
         <div class="tool-section"><h3>Conversas de Acesso Rápido</h3><div id="saved-conversations-list"></div></div><hr>
         <div class="tool-section"><h3>Backup / Transferência (Arquivos)</h3><p class="tool-description">Use para salvar um arquivo no seu computador.</p>
         <span id="file-name-display" class="file-display-sidebar"></span>
@@ -38,13 +40,6 @@
             <div class="sidebar-control-group">
                 <label for="speed-slider-sidebar" class="sidebar-label">Velocidade</label>
                 <input type="range" id="speed-slider-sidebar" min="50" max="250" value="180">
-            </div>
-            <div class="sidebar-control-group" style="margin-top: 10px;">
-                <label class="toggle-switch-label sidebar-label" title="Alternar para resposta em bloco único, sem pausas">
-                    <input type="checkbox" id="single-block-toggle-sidebar">
-                    <span class="slider"></span>
-                    Resposta Única
-                </label>
             </div>
         </div>
         <hr>
@@ -141,5 +136,4 @@
 <script src="./script.js"></script>
 
 </body>
-
 </html>
