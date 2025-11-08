@@ -39,11 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
         imagePreviewContainer: document.getElementById('image-preview-container'),
         imagePreview: document.getElementById('image-preview'),
         removeImageBtn: document.getElementById('remove-image-btn'),
-        // ELEMENTO TRANSFERIDO DO SIDEBAR
-        responseModeToggle: document.getElementById('response-mode-toggle'), // NOVO ID
-        speedSliderSidebar: document.getElementById('speed-slider-sidebar'),
-        // NOVO ELEMENTO PARA CONTADOR DE TOKENS
-        contextMeter: document.getElementById('context-meter') 
+        // NOVOS ELEMENTOS DO SIDEBAR E FOOTER
+        responseModeToggle: document.getElementById('single-block-toggle-sidebar'), // Toggle de Resposta Única do Sidebar
+        speedSliderSidebar: document.getElementById('speed-slider-sidebar'), // Slider de Velocidade do Sidebar
+        contextMeter: document.getElementById('context-meter') // Contador de Tokens no Footer
     };
 
     // ================================================================
@@ -61,11 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentParagraphSentences = [];
     let currentSentenceIndex = 0;
     let sentenceCountSincePause = 0;
-    
-    // --- VARIÁVEIS ATUALIZADAS PARA CONTROLE DE TOKENS ---
     let tokensDisplayedSincePause = 0; 
     const TOKEN_LIMIT_PER_CHUNK = 200; 
-    // ----------------------------------------------------
     
     let attachedImage = { base64: null, mimeType: null };
 
@@ -184,6 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.unlockInput();
                 return;
             }
+
+        const renderedSentences = (targetParagraph.textContent).trim();
+        targetParagraph.innerHTML = marked.parse(renderedSentences); // Garante que seja HTML
+        elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
+        currentSentenceIndex++;
+        sentenceCountSincePause++;
+
             targetParagraph.textContent += word + ' ';
             elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
             const interval = 300 - typingSpeed;
@@ -224,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleContinue() {
+        elements.userInput.blur(); // NOVO: Fecha o teclado
         ui.hideContinueBtn();
         sentenceCountSincePause = 0;
         tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS AO CONTINUAR
@@ -236,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addSafeEventListener(element, event, handler) { if (element) { element.addEventListener(event, handler); } }
 
 async function handleNewPrompt(level = 3) {
+    elements.userInput.blur(); // NOVO: Fecha o teclado
     if (isTyping) {
         stopTypingFlag = true;
         await new Promise(resolve => setTimeout(resolve, Math.max(300 - typingSpeed, 50)));
@@ -309,7 +314,7 @@ async function handleNewPrompt(level = 3) {
 
     try {
         const apiKey = localStorage.getItem('geminiApiKey');
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`; // MUDANÇA: Modelo alterado para Lite
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`; // Modelo alterado para Lite
 
         const messageParts = [];
         if (contentToSendToAPI) {
@@ -484,6 +489,7 @@ async function handleNewPrompt(level = 3) {
     function clearSearch() { rebuildChatFromHistory(); }
 
     function toggleSearchMode() {
+        elements.userInput.blur(); // NOVO: Fecha o teclado
         isSearchMode = !isSearchMode;
         elements.searchBtn.classList.toggle('hidden', !isSearchMode);
         elements.clearSearchBtn.classList.toggle('hidden', !isSearchMode);
@@ -753,7 +759,7 @@ async function handleNewPrompt(level = 3) {
             localStorage.setItem('typingSpeed', typingSpeed);
         });
         
-        // ATUALIZADO: Referência ao novo checkbox principal
+        // ATUALIZADO: Referência ao novo checkbox principal do Sidebar
         if (elements.responseModeToggle) {
             const savedSingleBlock = localStorage.getItem('singleBlockMode');
             elements.responseModeToggle.checked = savedSingleBlock === 'true';
@@ -856,7 +862,7 @@ async function handleNewPrompt(level = 3) {
                 elements.toolsSidebar.classList.add('open');
             }
         });
-        addSafeEventListener(elements.closeSidebarBtn, 'click', () => { // ID CORRETO AGORA
+        addSafeEventListener(elements.closeSidebarBtn, 'click', () => {
             if (elements.toolsSidebar) {
                 elements.toolsSidebar.classList.remove('open');
             }
@@ -897,7 +903,7 @@ async function handleNewPrompt(level = 3) {
         addSafeEventListener(window, 'beforeunload', saveActiveConversation);
 
         setupSystemPrompt();
-        setupSpeedControl(); // Esta função agora cuida do novo checkbox principal
+        setupSpeedControl();
         setupImageUpload(); 
         checkApiKey();
     }
