@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         continueBtn: document.getElementById('continue-btn'),
         continueContainer: document.getElementById('continue-container'),
         openSidebarBtn: document.getElementById('open-sidebar-btn'),
-        closeSidebarBtn: document.getElementById('close-sidebar-btn'), // CORREÇÃO: No HTML é 'close-btn'
+        closeSidebarBtn: document.getElementById('close-sidebar-btn'), // ID CORRETO: close-sidebar-btn
         toolsSidebar: document.getElementById('tools-sidebar'),
         conversationNameInput: document.getElementById('conversation-name-input'),
         saveConversationBtn: document.getElementById('save-conversation-btn'),
@@ -39,9 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
         imagePreviewContainer: document.getElementById('image-preview-container'),
         imagePreview: document.getElementById('image-preview'),
         removeImageBtn: document.getElementById('remove-image-btn'),
-        // NOVO ELEMENTO TRANSFERIDO DO SIDEBAR
-        responseModeToggle: document.getElementById('response-mode-toggle'), // Novo ID para o checkbox principal
-        speedSliderSidebar: document.getElementById('speed-slider-sidebar')
+        // ELEMENTO TRANSFERIDO DO SIDEBAR
+        responseModeToggle: document.getElementById('response-mode-toggle'), // NOVO ID
+        speedSliderSidebar: document.getElementById('speed-slider-sidebar'),
+        // NOVO ELEMENTO PARA CONTADOR DE TOKENS
+        contextMeter: document.getElementById('context-meter') 
     };
 
     // ================================================================
@@ -59,6 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentParagraphSentences = [];
     let currentSentenceIndex = 0;
     let sentenceCountSincePause = 0;
+    
+    // --- VARIÁVEIS ATUALIZADAS PARA CONTROLE DE TOKENS ---
+    let tokensDisplayedSincePause = 0; 
+    const TOKEN_LIMIT_PER_CHUNK = 200; 
+    // ----------------------------------------------------
+    
     let attachedImage = { base64: null, mimeType: null };
 
     const ACTIVE_CONVERSATION_KEY = 'activeConversation';
@@ -134,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentParagraphSentences = [];
         currentSentenceIndex = 0;
         sentenceCountSincePause = 0;
+        tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS
         stopTypingFlag = false;
         processNextQueueItem();
     }
@@ -179,17 +188,22 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
             const interval = 300 - typingSpeed;
             await new Promise(resolve => setTimeout(resolve, interval));
+            
+            // NOVO: Contagem de tokens estimada (1 palavra ~= 4 tokens)
+            tokensDisplayedSincePause += 4; 
         }
         const renderedSentences = (targetParagraph.textContent).trim();
         targetParagraph.innerHTML = marked.parse(renderedSentences);
         elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
         currentSentenceIndex++;
         sentenceCountSincePause++;
-        // ATUALIZADO: Referência ao novo checkbox principal
+        
+        // MUDANÇA: Condição de pausa baseada em TOKENS (200)
         const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
         const isLastSentence = currentSentenceIndex >= currentParagraphSentences.length;
-        const sentenceLimitReached = sentenceCountSincePause >= 3;
-        if (sentenceLimitReached && !isLastSentence && !isSingleBlockMode) {
+        const tokenLimitReached = tokensDisplayedSincePause >= TOKEN_LIMIT_PER_CHUNK; 
+        
+        if (tokenLimitReached && (level = 3) && !isSingleBlockMode) {  //&& !isLastSentence 
             isTyping = false;
             ui.showContinueBtn();
             ui.unlockInput();
@@ -212,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleContinue() {
         ui.hideContinueBtn();
         sentenceCountSincePause = 0;
+        tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS AO CONTINUAR
         processNextQueueItem();
     }
 
@@ -265,18 +280,15 @@ async function handleNewPrompt(level = 3) {
     let feedbackPrefix = "";
     switch (level) {
         case 1:
-            feedbackPrefix = "  _(resp. 1: curta)_  ";
+            feedbackPrefix = "  **Objetivamente:**  ";
             break;
         case 2:
-            feedbackPrefix = "  _(resp. 2: média)_  ";
-            break;
-       case 3:
-            feedbackPrefix = "  _(resp. 3: livre)_  ";
+            feedbackPrefix = "  **2 parágrafos:**  ";
             break;
     }
 
     if (feedbackPrefix && userMessageText) {
-        displayUserContent = userMessageText + feedbackPrefix;
+        displayUserContent = feedbackPrefix + userMessageText;
     } else if (feedbackPrefix && !userMessageText) {
         displayUserContent = feedbackPrefix + "[Imagem anexada]";
     } else if (!userMessageText && attachedImage.base64) {
@@ -297,7 +309,7 @@ async function handleNewPrompt(level = 3) {
 
     try {
         const apiKey = localStorage.getItem('geminiApiKey');
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`; // MUDANÇA: Modelo alterado para Lite
 
         const messageParts = [];
         if (contentToSendToAPI) {
@@ -415,7 +427,7 @@ async function handleNewPrompt(level = 3) {
         updateContextMeter();
         try {
             const apiKey = localStorage.getItem('geminiApiKey');
-            const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`; // MUDANÇA: Modelo Lite
             const requestBody = { contents: [{ role: 'user', parts: [{ text: fullAnalysisPrompt }] }] };
             const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) {
@@ -559,12 +571,11 @@ async function handleNewPrompt(level = 3) {
     // 7. FUNÇÕES DE GERENCIAMENTO DE CONVERSA
     // ================================================================
     function updateContextMeter() {
-        const meterElement = document.getElementById('context-meter');
-        if (!meterElement) { return; }
+        if (!elements.contextMeter) { return; } // Garante que o elemento existe antes de tentar usá-lo
         const totalChars = conversationHistory.messages.reduce((sum, message) => sum + (message.content ? message.content.length : 0), 0);
         let approximateTokens = Math.round(totalChars / 4);
         approximateTokens = Math.floor(approximateTokens / 10) * 10;
-        meterElement.textContent = `Contexto: ~${approximateTokens.toLocaleString('pt-BR')} tokens`;
+        elements.contextMeter.textContent = `Contexto: ~${approximateTokens.toLocaleString('pt-BR')} tokens`;
     }
 
     function saveConversation() {
@@ -743,8 +754,8 @@ async function handleNewPrompt(level = 3) {
         });
         
         // ATUALIZADO: Referência ao novo checkbox principal
-        const savedSingleBlock = localStorage.getItem('singleBlockMode');
         if (elements.responseModeToggle) {
+            const savedSingleBlock = localStorage.getItem('singleBlockMode');
             elements.responseModeToggle.checked = savedSingleBlock === 'true';
         }
         addSafeEventListener(elements.responseModeToggle, 'change', (e) => {
@@ -845,7 +856,7 @@ async function handleNewPrompt(level = 3) {
                 elements.toolsSidebar.classList.add('open');
             }
         });
-        addSafeEventListener(elements.closeSidebarBtn, 'click', () => { // CORREÇÃO: Usando 'close-btn' do HTML
+        addSafeEventListener(elements.closeSidebarBtn, 'click', () => { // ID CORRETO AGORA
             if (elements.toolsSidebar) {
                 elements.toolsSidebar.classList.remove('open');
             }
