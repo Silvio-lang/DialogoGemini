@@ -17,8 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingIndicator: document.getElementById('loading-indicator'),
         continueBtn: document.getElementById('continue-btn'),
         continueContainer: document.getElementById('continue-container'),
+        continueTypingBtn: document.getElementById('continue-typing-btn'), // NOVO ELEMENTO
         openSidebarBtn: document.getElementById('open-sidebar-btn'),
-        closeSidebarBtn: document.getElementById('close-sidebar-btn'), // ID CORRETO: close-sidebar-btn
+        closeSidebarBtn: document.getElementById('close-sidebar-btn'),
         toolsSidebar: document.getElementById('tools-sidebar'),
         conversationNameInput: document.getElementById('conversation-name-input'),
         saveConversationBtn: document.getElementById('save-conversation-btn'),
@@ -39,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         imagePreviewContainer: document.getElementById('image-preview-container'),
         imagePreview: document.getElementById('image-preview'),
         removeImageBtn: document.getElementById('remove-image-btn'),
-        // NOVOS ELEMENTOS DO SIDEBAR E FOOTER
+        // ELEMENTOS DO SIDEBAR E FOOTER ATUALIZADOS
         responseModeToggle: document.getElementById('single-block-toggle-sidebar'), // Toggle de Resposta Única do Sidebar
         speedSliderSidebar: document.getElementById('speed-slider-sidebar'), // Slider de Velocidade do Sidebar
         contextMeter: document.getElementById('context-meter') // Contador de Tokens no Footer
@@ -145,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function processNextQueueItem() {
         if (stopTypingFlag) { console.log("Exibição interrompida."); ui.unlockInput(); return; }
-        // ATUALIZADO: Referência ao novo checkbox principal
         const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
 
         if (currentSentenceIndex >= currentParagraphSentences.length) {
@@ -180,19 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.unlockInput();
                 return;
             }
-
-        const renderedSentences = (targetParagraph.textContent).trim();
-        targetParagraph.innerHTML = marked.parse(renderedSentences); // Garante que seja HTML
-        elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
-        currentSentenceIndex++;
-        sentenceCountSincePause++;
-
             targetParagraph.textContent += word + ' ';
             elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
             const interval = 300 - typingSpeed;
             await new Promise(resolve => setTimeout(resolve, interval));
             
-            // NOVO: Contagem de tokens estimada (1 palavra ~= 4 tokens)
             tokensDisplayedSincePause += 4; 
         }
         const renderedSentences = (targetParagraph.textContent).trim();
@@ -201,12 +193,11 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSentenceIndex++;
         sentenceCountSincePause++;
         
-        // MUDANÇA: Condição de pausa baseada em TOKENS (200)
         const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
         const isLastSentence = currentSentenceIndex >= currentParagraphSentences.length;
         const tokenLimitReached = tokensDisplayedSincePause >= TOKEN_LIMIT_PER_CHUNK; 
         
-        if (tokenLimitReached && (level = 3) && !isSingleBlockMode) {  //&& !isLastSentence 
+        if (tokenLimitReached && (level = 3) && !isSingleBlockMode) {
             isTyping = false;
             ui.showContinueBtn();
             ui.unlockInput();
@@ -231,7 +222,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.hideContinueBtn();
         sentenceCountSincePause = 0;
         tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS AO CONTINUAR
+        
+        // Força a renderização do que foi pausado
+        if (elements.continueContainer && !elements.continueContainer.classList.contains('hidden') && currentMessageContentContainer && currentParagraphSentences.length > 0) {
+            const targetParagraph = currentMessageContentContainer.lastElementChild;
+            const remainingText = targetParagraph.textContent.trim();
+            targetParagraph.innerHTML = marked.parse(remainingText);
+        }
+
         processNextQueueItem();
+        elements.userInput.focus(); // Garante que o campo de texto está focado para a próxima interação
     }
 
     // ================================================================
@@ -314,7 +314,7 @@ async function handleNewPrompt(level = 3) {
 
     try {
         const apiKey = localStorage.getItem('geminiApiKey');
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`; // Modelo alterado para Lite
+        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
 
         const messageParts = [];
         if (contentToSendToAPI) {
@@ -432,7 +432,7 @@ async function handleNewPrompt(level = 3) {
         updateContextMeter();
         try {
             const apiKey = localStorage.getItem('geminiApiKey');
-            const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`; // MUDANÇA: Modelo Lite
+            const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
             const requestBody = { contents: [{ role: 'user', parts: [{ text: fullAnalysisPrompt }] }] };
             const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
             if (!response.ok) {
@@ -577,7 +577,7 @@ async function handleNewPrompt(level = 3) {
     // 7. FUNÇÕES DE GERENCIAMENTO DE CONVERSA
     // ================================================================
     function updateContextMeter() {
-        if (!elements.contextMeter) { return; } // Garante que o elemento existe antes de tentar usá-lo
+        if (!elements.contextMeter) { return; }
         const totalChars = conversationHistory.messages.reduce((sum, message) => sum + (message.content ? message.content.length : 0), 0);
         let approximateTokens = Math.round(totalChars / 4);
         approximateTokens = Math.floor(approximateTokens / 10) * 10;
@@ -856,6 +856,7 @@ async function handleNewPrompt(level = 3) {
             hideConfirmationModal();
         });
         addSafeEventListener(elements.continueBtn, 'click', handleContinue);
+        addSafeEventListener(elements.continueTypingBtn, 'click', handleContinueTyping); // NOVO LISTENER
         addSafeEventListener(elements.openSidebarBtn, 'click', () => {
             if (elements.toolsSidebar) {
                 renderSavedConversations();
@@ -959,5 +960,15 @@ function setupImageUpload() {
         reader.readAsDataURL(file);
     });
 }
+
+    // NOVO: Função para continuar a resposta E focar o input
+    function handleContinueTyping() {
+        // Ação Desejada: Fechar o teclado (se aberto) e focar o input para digitar, sem avançar a resposta.
+        elements.userInput.blur(); // Fecha o teclado (se aberto)
+        elements.userInput.focus(); // Abre o teclado e coloca o cursor no campo de texto
+        
+        // O botão 'continue-btn' continua responsável por avançar a animação pausada.
+    }
+
     initializeApp();
 });
