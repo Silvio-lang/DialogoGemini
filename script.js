@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         continueBtn: document.getElementById('continue-btn'),
         continueContainer: document.getElementById('continue-container'),
         continueTypingBtn: document.getElementById('continue-typing-btn'), // NOVO ELEMENTO
+        startNewPromptBtn: document.getElementById('start-new-prompt-btn'), // NOVO ID sugerido
         openSidebarBtn: document.getElementById('open-sidebar-btn'),
         closeSidebarBtn: document.getElementById('close-sidebar-btn'),
         toolsSidebar: document.getElementById('tools-sidebar'),
@@ -217,21 +218,21 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
     }
 
-    function handleContinue() {
-        elements.userInput.blur(); // NOVO: Fecha o teclado
+function handleContinue() {
+        elements.userInput.blur(); // Fecha o teclado (se aberto)
         ui.hideContinueBtn();
         sentenceCountSincePause = 0;
         tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS AO CONTINUAR
         
-        // Força a renderização do que foi pausado
-        if (elements.continueContainer && !elements.continueContainer.classList.contains('hidden') && currentMessageContentContainer && currentParagraphSentences.length > 0) {
+        // Força a renderização estática do que foi pausado antes de continuar
+        if (currentMessageContentContainer && currentParagraphSentences.length > 0) {
             const targetParagraph = currentMessageContentContainer.lastElementChild;
             const remainingText = targetParagraph.textContent.trim();
             targetParagraph.innerHTML = marked.parse(remainingText);
         }
-
+        
         processNextQueueItem();
-        elements.userInput.focus(); // Garante que o campo de texto está focado para a próxima interação
+        // REMOVIDO QUALQUER elements.userInput.focus() AQUI.
     }
 
     // ================================================================
@@ -786,6 +787,16 @@ async function handleNewPrompt(level = 3) {
         if (confirmationModal) confirmationModal.classList.add('hidden');
     }
 
+// NOVO: Função para iniciar um novo prompt (abre o teclado)
+    function handleStartNewPrompt() {
+        // 1. Se a resposta estiver pausada, avança a digitação (handleContinue já tem .blur())
+        if (!elements.continueContainer.classList.contains('hidden')) {
+            handleContinue(); 
+        }
+        
+        // 2. Abre o teclado para o usuário
+        elements.userInput.focus(); 
+    }
     // ================================================================
     // 9. LÓGICA DE INICIALIZAÇÃO E EVENT LISTENERS
     // ================================================================
@@ -856,7 +867,7 @@ async function handleNewPrompt(level = 3) {
             hideConfirmationModal();
         });
         addSafeEventListener(elements.continueBtn, 'click', handleContinue);
-        addSafeEventListener(elements.continueTypingBtn, 'click', handleContinueTyping); // NOVO LISTENER
+        addSafeEventListener(elements.startNewPromptBtn, 'click', handleStartNewPrompt); // NOVO LISTENER
         addSafeEventListener(elements.openSidebarBtn, 'click', () => {
             if (elements.toolsSidebar) {
                 renderSavedConversations();
@@ -962,13 +973,14 @@ function setupImageUpload() {
 }
 
     // NOVO: Função para continuar a resposta E focar o input
-    function handleContinueTyping() {
-        // Ação Desejada: Fechar o teclado (se aberto) e focar o input para digitar, sem avançar a resposta.
-        elements.userInput.blur(); // Fecha o teclado (se aberto)
-        elements.userInput.focus(); // Abre o teclado e coloca o cursor no campo de texto
+    function handleStartNewPrompt() {
+        // 1. Se a resposta estiver pausada, avança a digitação (mantém o comportamento de "avançar")
+        if (!elements.continueContainer.classList.contains('hidden')) {
+            handleContinue(); 
+        }
         
-        // O botão 'continue-btn' continua responsável por avançar a animação pausada.
+        // 2. Abre o teclado para o usuário (o foco reabre o teclado)
+        elements.userInput.focus(); 
     }
-
     initializeApp();
 });
