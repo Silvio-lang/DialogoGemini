@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingIndicator: document.getElementById('loading-indicator'),
         continueBtn: document.getElementById('continue-btn'),
         continueContainer: document.getElementById('continue-container'),
-        continueTypingBtn: document.getElementById('continue-typing-btn'), // NOVO ELEMENTO
-        startNewPromptBtn: document.getElementById('start-new-prompt-btn'), // NOVO ID sugerido
+        continueTypingBtn: document.getElementById('continue-typing-btn'), 
+        startNewPromptBtn: document.getElementById('start-new-prompt-btn'),
         openSidebarBtn: document.getElementById('open-sidebar-btn'),
         closeSidebarBtn: document.getElementById('close-sidebar-btn'),
         toolsSidebar: document.getElementById('tools-sidebar'),
@@ -41,10 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
         imagePreviewContainer: document.getElementById('image-preview-container'),
         imagePreview: document.getElementById('image-preview'),
         removeImageBtn: document.getElementById('remove-image-btn'),
-        // ELEMENTOS DO SIDEBAR E FOOTER ATUALIZADOS
-        responseModeToggle: document.getElementById('single-block-toggle-sidebar'), // Toggle de Resposta Única do Sidebar
-        speedSliderSidebar: document.getElementById('speed-slider-sidebar'), // Slider de Velocidade do Sidebar
-        contextMeter: document.getElementById('context-meter') // Contador de Tokens no Footer
+        responseModeToggle: document.getElementById('response-mode-toggle'), 
+        speedSliderSidebar: document.getElementById('speed-slider-sidebar'), 
+        contextMeter: document.getElementById('context-meter') 
     };
 
     // ================================================================
@@ -56,6 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSearchMode = false;
     let stopTypingFlag = false;
     let currentFileName = null;
+    
+    // TEMPOS PADRÃO
+    const DEFAULT_PARAGRAPH_PAUSE = 2000; // Seu pedido de 2000 mSeg (2 segundos)
+    const DEFAULT_TYPING_SPEED = 180; 
 
     let responseQueue = [];
     let currentMessageContentContainer = null;
@@ -69,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const ACTIVE_CONVERSATION_KEY = 'activeConversation';
     const DEFAULT_SYSTEM_PROMPT = "Você é o DiálogoGemini, um assistente de IA prestativo e amigável. Responda em português do Brasil.";
-
+    
     // ================================================================
     // 3. FUNÇÕES DE UI
     // ================================================================
@@ -87,10 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
         unlockInput: () => {
             if (elements.userInput) elements.userInput.disabled = false;
             const hasText = elements.userInput.value.length > 0;
-            if (elements.sendLevel1Btn) elements.sendLevel1Btn.disabled = !hasText;
-            if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = !hasText;
-            if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = !hasText;
-            if (elements.userInput) elements.userInput.focus();
+            const hasImage = attachedImage.base64 !== null;
+            if (elements.sendLevel1Btn) elements.sendLevel1Btn.disabled = !hasText && !hasImage;
+            if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = !hasText && !hasImage;
+            if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = !hasText && !hasImage;
         }
     };
 
@@ -112,6 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loadedHistory = JSON.parse(savedState);
                 if (loadedHistory && Array.isArray(loadedHistory.messages)) {
                     conversationHistory = loadedHistory;
+                    
+                    if (conversationHistory.messages.length === 1 && conversationHistory.messages[0]?.role === 'model') {
+                        localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
+                        localStorage.removeItem('activeConversationName');
+                        conversationHistory = { messages: [], systemPrompt: loadedHistory.systemPrompt || null };
+                        return false; 
+                    }
+                    
                     rebuildChatFromHistory();
                     if (conversationHistory.systemPrompt) {
                         elements.systemPromptInput.value = conversationHistory.systemPrompt;
@@ -140,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentParagraphSentences = [];
         currentSentenceIndex = 0;
         sentenceCountSincePause = 0;
-        tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS
+        tokensDisplayedSincePause = 0; 
         stopTypingFlag = false;
         processNextQueueItem();
     }
@@ -150,8 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
 
         if (currentSentenceIndex >= currentParagraphSentences.length) {
-            if (responseQueue.length === 0) { ui.unlockInput(); return; }
-            if (currentMessageContentContainer !== null && !isSingleBlockMode) { await new Promise(resolve => setTimeout(resolve, 1500)); }
+            if (responseQueue.length === 0) { 
+                ui.unlockInput(); 
+                elements.continueBtn.classList.add('hidden');
+                elements.continueTypingBtn.classList.remove('hidden');
+                ui.showContinueBtn();
+                return; 
+            }
+            if (currentMessageContentContainer !== null && !isSingleBlockMode) { 
+                await new Promise(resolve => setTimeout(resolve, DEFAULT_PARAGRAPH_PAUSE)); 
+            }
             const nextParagraph = responseQueue.shift();
             currentParagraphSentences = nextParagraph.match(/[^.!?]+[.!?]*\s*|[^.!?]+$/g) || [];
             currentSentenceIndex = 0;
@@ -171,15 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function typeSentence(sentence, targetParagraph) {
         isTyping = true;
         ui.lockInput();
-        const words = sentence.trim().split(' ');
-        for (const word of words) {
+        for (const word of sentence.trim().split(' ')) {
             if (stopTypingFlag) {
-                const remainingWords = words.slice(words.indexOf(word)).join(' ');
-                const fullRemainingTextInParagraph = (targetParagraph.textContent + remainingWords).trim();
-                targetParagraph.innerHTML = marked.parse(fullRemainingTextInParagraph);
+                const remainingWords = sentence.trim().substring(targetParagraph.textContent.length).trim();
+                targetParagraph.textContent += remainingWords;
+                targetParagraph.innerHTML = marked.parse(targetParagraph.textContent.trim());
+                
                 renderRestOfQueueStatically();
+                
                 ui.unlockInput();
-                return;
+                return; 
             }
             targetParagraph.textContent += word + ' ';
             elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
@@ -195,13 +215,18 @@ document.addEventListener('DOMContentLoaded', () => {
         sentenceCountSincePause++;
         
         const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
-        const isLastSentence = currentSentenceIndex >= currentParagraphSentences.length;
+        
+        const lastUserPrompt = conversationHistory.messages.slice().reverse().find(msg => msg.role === 'user');
+        const level = lastUserPrompt ? lastUserPrompt.level : 3;
+
         const tokenLimitReached = tokensDisplayedSincePause >= TOKEN_LIMIT_PER_CHUNK; 
         
-        if (tokenLimitReached && (level = 3) && !isSingleBlockMode) {
+        if (tokenLimitReached && (level === 3) && !isSingleBlockMode) { 
             isTyping = false;
             ui.showContinueBtn();
-            ui.unlockInput();
+            elements.continueBtn.classList.remove('hidden'); 
+            elements.continueTypingBtn.classList.remove('hidden'); 
+            ui.unlockInput(); 
         } else {
             isTyping = false;
             processNextQueueItem();
@@ -211,20 +236,34 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderRestOfQueueStatically() {
         const contentContainer = currentMessageContentContainer;
         if (!contentContainer) return;
+        
+        const targetParagraph = contentContainer.lastElementChild;
+        if (currentSentenceIndex < currentParagraphSentences.length) {
+            const remainingSentenceText = currentParagraphSentences.slice(currentSentenceIndex).join('');
+            targetParagraph.textContent += remainingSentenceText;
+        }
+        const parsedRemainingText = marked.parse(targetParagraph.textContent.trim());
+        targetParagraph.innerHTML = parsedRemainingText;
+
         const remainingText = responseQueue.map(p => `<p>${marked.parse(p)}</p>`).join('');
         contentContainer.innerHTML += remainingText;
+        
         responseQueue = [];
         stopTypingFlag = true;
         elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
     }
 
 function handleContinue() {
-        elements.userInput.blur(); // Fecha o teclado (se aberto)
-        ui.hideContinueBtn();
-        sentenceCountSincePause = 0;
-        tokensDisplayedSincePause = 0; // RESETA O CONTADOR DE TOKENS AO CONTINUAR
+        // CORREÇÃO: Força a remoção do foco para não abrir o teclado no celular.
+        elements.userInput.blur();
         
-        // Força a renderização estática do que foi pausado antes de continuar
+        ui.hideContinueBtn();
+        elements.continueBtn.classList.add('hidden');
+        elements.continueTypingBtn.classList.add('hidden');
+        
+        sentenceCountSincePause = 0;
+        tokensDisplayedSincePause = 0;
+        
         if (currentMessageContentContainer && currentParagraphSentences.length > 0) {
             const targetParagraph = currentMessageContentContainer.lastElementChild;
             const remainingText = targetParagraph.textContent.trim();
@@ -232,24 +271,31 @@ function handleContinue() {
         }
         
         processNextQueueItem();
-        // REMOVIDO QUALQUER elements.userInput.focus() AQUI.
     }
 
+function handleStartNewPrompt() {
+        stopTypingFlag = true;
+        ui.hideContinueBtn();
+        elements.continueBtn.classList.add('hidden'); 
+        elements.continueTypingBtn.classList.add('hidden'); 
+        
+        ui.unlockInput();
+        // Não chamamos focus() aqui para evitar teclado indesejado no celular.
+    }
     // ================================================================
     // 6. FUNÇÕES PRINCIPAIS E DE LÓGICA
     // ================================================================
     function addSafeEventListener(element, event, handler) { if (element) { element.addEventListener(event, handler); } }
 
 async function handleNewPrompt(level = 3) {
-    elements.userInput.blur(); // NOVO: Fecha o teclado
+    elements.userInput.blur();
     if (isTyping) {
         stopTypingFlag = true;
-        await new Promise(resolve => setTimeout(resolve, Math.max(300 - typingSpeed, 50)));
+        await new Promise(resolve => setTimeout(resolve, Math.max(300 - typingSpeed, 50))); 
     }
 
-    const userMessageText = elements.userInput.value.trim(); // Texto original do usuário
+    const userMessageText = elements.userInput.value.trim();
 
-    // --- LÓGICA PARA ADICIONAR PREFIXO AO PROMPT ENVIADO PARA A API ---
     let promptPrefix = "";
     switch (level) {
         case 1:
@@ -264,32 +310,24 @@ async function handleNewPrompt(level = 3) {
             break;
     }
 
-    // O conteúdo que será ENVIADO para a API (com prefixo, se houver)
     let contentToSendToAPI = userMessageText;
-    if (promptPrefix) { 
-        contentToSendToAPI = promptPrefix + userMessageText;
-    }
-    if (promptPrefix && !userMessageText) {
-        contentToSendToAPI = promptPrefix;
-    }
-    // --- FIM DA LÓGICA DE PREFIXO ---
+    if (promptPrefix) { contentToSendToAPI = promptPrefix + userMessageText; }
+    if (promptPrefix && !userMessageText) { contentToSendToAPI = promptPrefix; }
 
-    // Permite enviar apenas uma imagem, sem texto.
     if (!userMessageText && !attachedImage.base64) return;
 
     ui.hideContinueBtn();
+    elements.continueBtn.classList.add('hidden'); 
+    elements.continueTypingBtn.classList.add('hidden'); 
 
-    // ================================================================
-    // FEEDBACK VISUAL (Com prefixos para níveis 1 e 2)
-    // ================================================================
     let displayUserContent = userMessageText;
     let feedbackPrefix = "";
     switch (level) {
         case 1:
-            feedbackPrefix = "  **Objetivamente:**  ";
+            feedbackPrefix = "  **Objetivamente:** ";
             break;
         case 2:
-            feedbackPrefix = "  **2 parágrafos:**  ";
+            feedbackPrefix = "  **2 parágrafos:** ";
             break;
     }
 
@@ -301,10 +339,9 @@ async function handleNewPrompt(level = 3) {
         displayUserContent = "[Imagem anexada]";
     }
 
-    const userMessage = { role: 'user', content: displayUserContent, timestamp: new Date().toISOString() };
+    const userMessage = { role: 'user', content: displayUserContent, timestamp: new Date().toISOString(), level: level }; 
     conversationHistory.messages.push(userMessage);
-    displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp); // Mostra o texto com o feedback
-    // ================================================================
+    displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp);
 
     saveActiveConversation();
     updateContextMeter();
@@ -337,7 +374,7 @@ async function handleNewPrompt(level = 3) {
 
         const apiFormattedHistory = conversationHistory.messages.slice(0, -1).map(msg => ({
             role: msg.role === 'model' ? 'model' : 'user',
-            parts: [{ text: msg.content.replace(/  \*\*(Objetivamente|Máx\. 2 parágrafos):(?:\s*\*\/)?\s\*\*/g, '').replace(/\[Imagem anexada\]/g, '').trim() }]
+            parts: [{ text: msg.content.replace(/  \*\*(Objetivamente|2 parágrafos):(?:\s*\*\/)?\s\*\*/g, '').replace(/\[Imagem anexada\]/g, '').trim() }]
         }));
 
         let finalUserPromptParts = messageParts;
@@ -349,35 +386,16 @@ async function handleNewPrompt(level = 3) {
 
         let generationConfig = {};
         switch (level) {
-            case 1: // Resposta Curta
-                generationConfig = {
-                    maxOutputTokens: 50,
-                    temperature: 0.2,
-                    topP: 0.8
-                };
-                break;
-            case 2: // Resposta Média
-                generationConfig = {
-                    maxOutputTokens: 200,
-                    temperature: 0.5,
-                    topP: 0.9
-                };
-                break;
-            case 3: // Resposta Livre
-            default: // Default para level 3 se não especificado ou inválido
-                generationConfig = {
-                    maxOutputTokens: 2048, // Ou o limite máximo da API
-                    temperature: 0.7,
-                    topP: 1.0
-                };
-                break;
+            case 1: 
+                generationConfig = { maxOutputTokens: 50, temperature: 0.2, topP: 0.8 }; break;
+            case 2:
+                generationConfig = { maxOutputTokens: 200, temperature: 0.5, topP: 0.9 }; break;
+            case 3:
+            default:
+                generationConfig = { maxOutputTokens: 2048, temperature: 0.7, topP: 1.0 }; break;
         }
 
-        const requestBody = {
-            contents: apiFormattedHistory,
-            generationConfig: generationConfig
-        };
-
+        const requestBody = { contents: apiFormattedHistory, generationConfig: generationConfig };
         const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
 
         document.getElementById('remove-image-btn').click();
@@ -387,15 +405,12 @@ async function handleNewPrompt(level = 3) {
             try {
                 const errorBody = await response.json();
                 errorDetail = errorBody.error.message || response.statusText;
-            } catch (e) {
-                // Ignora se não for JSON (ex: erro 500 puro)
-            }
+            } catch (e) {}
             throw new Error(`Erro da API (${response.status}): ${errorDetail}`);
         }
         
         const data = await response.json();
         
-        // VERIFICAÇÃO DE SEGURANÇA CRÍTICA
         if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || data.candidates[0].content.parts.length === 0) {
             throw new Error("Resposta da API não contém texto de candidato válido.");
         }
@@ -459,19 +474,24 @@ async function handleNewPrompt(level = 3) {
     function startNewChat() {
         stopTypingFlag = true;
         currentFileName = null;
-        conversationHistory = { messages: [], systemPrompt: null };
+        conversationHistory = { messages: [], systemPrompt: null }; 
         const globalSystemPrompt = localStorage.getItem('systemPrompt') || DEFAULT_SYSTEM_PROMPT;
-        conversationHistory.systemPrompt = globalSystemPrompt;
         elements.systemPromptInput.value = globalSystemPrompt;
+        conversationHistory.systemPrompt = globalSystemPrompt;
         elements.chatWindow.innerHTML = '';
         elements.conversationNameInput.value = '';
         ui.hideContinueBtn();
+        elements.continueBtn.classList.add('hidden');
+        elements.continueTypingBtn.classList.add('hidden');
         localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
         localStorage.removeItem('activeConversationName');
+        
         const welcomeMessage = { role: 'model', content: 'Olá! **DiálogoGemini** às ordens!', timestamp: new Date().toISOString() };
         conversationHistory.messages.push(welcomeMessage);
         displayStaticMessage(welcomeMessage.content, welcomeMessage.role, welcomeMessage.timestamp);
+        
         ui.unlockInput();
+        // REMOVIDO o foco automático aqui para evitar teclado no celular
         setTimeout(() => updateContextMeter(), 0);
     }
     
@@ -490,7 +510,7 @@ async function handleNewPrompt(level = 3) {
     function clearSearch() { rebuildChatFromHistory(); }
 
     function toggleSearchMode() {
-        elements.userInput.blur(); // NOVO: Fecha o teclado
+        elements.userInput.blur();
         isSearchMode = !isSearchMode;
         elements.searchBtn.classList.toggle('hidden', !isSearchMode);
         elements.clearSearchBtn.classList.toggle('hidden', !isSearchMode);
@@ -502,7 +522,8 @@ async function handleNewPrompt(level = 3) {
             elements.userInput.placeholder = "Digite sua mensagem ou anexe uma imagem...";
             clearSearch();
         }
-        elements.userInput.focus();
+        // Chamada de foco mantida aqui pois o modo busca/entrada DEVE focar o input
+        elements.userInput.focus(); 
     }
     
     function setupSystemPrompt() {
@@ -589,6 +610,7 @@ async function handleNewPrompt(level = 3) {
         const name = elements.conversationNameInput.value.trim();
         if (!name) { alert("Por favor, dê um nome para a conversa."); return; }
         if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar."); return; }
+        
         const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || [];
         const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() };
         const updatedConversations = savedConversations.filter(c => c.name !== name);
@@ -611,9 +633,9 @@ async function handleNewPrompt(level = 3) {
             rebuildChatFromHistory();
             elements.conversationNameInput.value = conversationToLoad.name;
             if (conversationHistory.systemPrompt) {
-                elements.systemPromptInput.value = conversationHistory.systemPrompt;
+                elements.systemPromptInput.value = conversationToLoad.systemPrompt;
             } else {
-                conversationHistory.systemPrompt = elements.systemPromptInput.value;
+                elements.systemPromptInput.value = DEFAULT_SYSTEM_PROMPT;
             }
             localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
             localStorage.removeItem('activeConversationName');
@@ -643,7 +665,7 @@ async function handleNewPrompt(level = 3) {
         savedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         savedConversations.forEach(conv => {
             const date = new Date(conv.timestamp);
-            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+            const formattedDate = date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             const item = document.createElement('div');
             item.className = 'saved-conversation-item';
             item.innerHTML = `<div class="conversation-info"><span class="name">${conv.name}</span><span class="timestamp">${formattedDate}</span></div><div class="conversation-actions"><button class="load-btn" data-timestamp="${conv.timestamp}">Carregar</button><button class="delete-btn" data-timestamp="${conv.timestamp}">Excluir</button></div>`;
@@ -719,7 +741,7 @@ async function handleNewPrompt(level = 3) {
                     rebuildChatFromHistory();
                     elements.conversationNameInput.value = fileNameWithoutExt;
                     if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; }
-                    else { conversationHistory.systemPrompt = elements.systemPromptInput.value; }
+                    else { elements.systemPromptInput.value = DEFAULT_SYSTEM_PROMPT; } 
                     localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
                     localStorage.removeItem('activeConversationName');
                     alert("Conversa importada com sucesso!");
@@ -736,19 +758,27 @@ async function handleNewPrompt(level = 3) {
         input.click();
     }
 
-    function saveApiKey() {
+    // CORREÇÃO FINAL: Combina preventDefault com setTimeout(0)
+    function saveApiKey(event) {
+        event.preventDefault(); // IMPEDE O RECARREGAMENTO E O LOOP DO MODAL
+        
         const apiKey = elements.apiKeyInput.value.trim();
         if (apiKey) {
             localStorage.setItem('geminiApiKey', apiKey);
-            elements.apiKeyModal.classList.add('hidden');
-            checkApiKey(); // Roda a checagem novamente
+            localStorage.removeItem('hasSeenTour'); 
+
+            // 1. FECHA O MODAL IMEDIATAMENTE
+            if (elements.apiKeyModal) elements.apiKeyModal.classList.add('hidden');
+            
+            // 2. AGENDA O INÍCIO DO CHAT para 0ms depois
+            setTimeout(startNewChat, 0); 
+            
         } else {
             alert("Por favor, insira uma chave de API válida.");
         }
     }
     
     function setupSpeedControl() {
-        // ATUALIZADO: Referência ao slider do sidebar
         if (!elements.speedSliderSidebar) return;
         const savedSpeed = localStorage.getItem('typingSpeed');
         if (savedSpeed) {
@@ -760,7 +790,6 @@ async function handleNewPrompt(level = 3) {
             localStorage.setItem('typingSpeed', typingSpeed);
         });
         
-        // ATUALIZADO: Referência ao novo checkbox principal do Sidebar
         if (elements.responseModeToggle) {
             const savedSingleBlock = localStorage.getItem('singleBlockMode');
             elements.responseModeToggle.checked = savedSingleBlock === 'true';
@@ -773,12 +802,23 @@ async function handleNewPrompt(level = 3) {
     // ================================================================
     // 8. LÓGICA DO MODAL DE CONFIRMAÇÃO
     // ================================================================
+    
     const confirmationModal = document.getElementById('confirmation-modal-overlay');
     const modalBtnCancel = document.getElementById('modal-btn-cancel');
     const modalBtnDiscard = document.getElementById('modal-btn-discard');
     const modalBtnSave = document.getElementById('modal-btn-save');
     let pendingAction = null;
+    
     function showConfirmationModal(action) {
+        if (!confirmationModal) { 
+            if (typeof action === 'function') { action(); }
+            return;
+        }
+        if (conversationHistory.messages.length <= 1 && !localStorage.getItem(ACTIVE_CONVERSATION_KEY)) {
+            if (typeof action === 'function') { action(); }
+            hideConfirmationModal(); 
+            return;
+        }
         pendingAction = action;
         if (confirmationModal) confirmationModal.classList.remove('hidden');
     }
@@ -787,16 +827,6 @@ async function handleNewPrompt(level = 3) {
         if (confirmationModal) confirmationModal.classList.add('hidden');
     }
 
-// NOVO: Função para iniciar um novo prompt (abre o teclado)
-    function handleStartNewPrompt() {
-        // 1. Se a resposta estiver pausada, avança a digitação (handleContinue já tem .blur())
-        if (!elements.continueContainer.classList.contains('hidden')) {
-            handleContinue(); 
-        }
-        
-        // 2. Abre o teclado para o usuário
-        elements.userInput.focus(); 
-    }
     // ================================================================
     // 9. LÓGICA DE INICIALIZAÇÃO E EVENT LISTENERS
     // ================================================================
@@ -804,7 +834,6 @@ async function handleNewPrompt(level = 3) {
         addSafeEventListener(elements.userInput, 'input', () => {
             const hasText = elements.userInput.value.length > 0;
             elements.clearPromptBtn.classList.toggle('hidden', !hasText);
-            // Habilitar botões de envio apenas se tiver texto OU imagem anexada
             const hasImage = attachedImage.base64 !== null;
             elements.sendLevel1Btn.disabled = !hasText && !hasImage;
             elements.sendLevel2Btn.disabled = !hasText && !hasImage;
@@ -838,24 +867,25 @@ async function handleNewPrompt(level = 3) {
                 }
             }
         });
-        // ATUALIZADO: Botões de nível estão no footer
         addSafeEventListener(elements.sendLevel1Btn, 'click', () => handleNewPrompt(1));
         addSafeEventListener(elements.sendLevel2Btn, 'click', () => handleNewPrompt(2));
         addSafeEventListener(elements.sendLevel3Btn, 'click', () => handleNewPrompt(3));
         
-        addSafeEventListener(elements.saveApiKeyBtn, 'click', saveApiKey);
+        // CORREÇÃO: Passa o 'event' para a função
+        addSafeEventListener(elements.saveApiKeyBtn, 'click', (event) => {
+            saveApiKey(event);
+        });
+        
         addSafeEventListener(elements.changeApiKeyLink, 'click', (e) => {
             e.preventDefault();
             if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden');
         });
+        
         addSafeEventListener(elements.newChatLink, 'click', (e) => {
             e.preventDefault();
-            if (conversationHistory.messages.length <= 1 && !localStorage.getItem(ACTIVE_CONVERSATION_KEY)) {
-                startNewChat();
-            } else {
-                showConfirmationModal(startNewChat);
-            }
+            showConfirmationModal(startNewChat);
         });
+
         addSafeEventListener(modalBtnCancel, 'click', hideConfirmationModal);
         addSafeEventListener(modalBtnDiscard, 'click', () => {
             if (typeof pendingAction === 'function') { pendingAction(); }
@@ -866,8 +896,10 @@ async function handleNewPrompt(level = 3) {
             if (typeof pendingAction === 'function') { pendingAction(); }
             hideConfirmationModal();
         });
-        addSafeEventListener(elements.continueBtn, 'click', handleContinue);
-        addSafeEventListener(elements.startNewPromptBtn, 'click', handleStartNewPrompt); // NOVO LISTENER
+        
+        addSafeEventListener(elements.continueBtn, 'click', handleContinue); 
+        addSafeEventListener(elements.continueTypingBtn, 'click', handleStartNewPrompt); 
+        
         addSafeEventListener(elements.openSidebarBtn, 'click', () => {
             if (elements.toolsSidebar) {
                 renderSavedConversations();
@@ -910,7 +942,8 @@ async function handleNewPrompt(level = 3) {
             elements.sendLevel2Btn.disabled = true;
             elements.sendLevel3Btn.disabled = true;
             elements.userInput.style.height = 'auto';
-            elements.userInput.focus();
+            // Chamada de foco mantida aqui, pois a limpeza implica que o usuário quer começar a digitar.
+            elements.userInput.focus(); 
         });
         addSafeEventListener(window, 'beforeunload', saveActiveConversation);
 
@@ -922,11 +955,14 @@ async function handleNewPrompt(level = 3) {
     
     function checkApiKey() {
         if (localStorage.getItem('geminiApiKey')) {
+            if (elements.apiKeyModal) elements.apiKeyModal.classList.add('hidden');
+            
             const wasLoaded = loadActiveConversation();
             if (!wasLoaded) {
-                startNewChat();
+                startNewChat(); 
             } else {
                 ui.unlockInput();
+                // REMOVIDO o foco aqui. O usuário pode ter voltado para a página para continuar lendo.
             }
         } else {
             if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden');
@@ -941,12 +977,12 @@ function setupImageUpload() {
     function resetImageState() {
         attachedImage.base64 = null;
         attachedImage.mimeType = null;
-        elements.imageInput.value = ''; // Limpa o seletor de arquivo
+        elements.imageInput.value = ''; 
         elements.imagePreviewContainer.classList.add('hidden');
     }
 
     addSafeEventListener(elements.attachFileBtn, 'click', () => {
-        elements.imageInput.click(); // Abre o seletor de arquivos
+        elements.imageInput.click(); 
     });
 
     addSafeEventListener(elements.removeImageBtn, 'click', resetImageState);
@@ -960,27 +996,14 @@ function setupImageUpload() {
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            // Guarda o tipo e os dados em Base64 (removendo o prefixo)
             attachedImage.mimeType = file.type;
             attachedImage.base64 = e.target.result.split(',')[1];
             
-            // Mostra a pré-visualização
             elements.imagePreview.src = e.target.result;
             elements.imagePreviewContainer.classList.remove('hidden');
         };
         reader.readAsDataURL(file);
     });
 }
-
-    // NOVO: Função para continuar a resposta E focar o input
-    function handleStartNewPrompt() {
-        // 1. Se a resposta estiver pausada, avança a digitação (mantém o comportamento de "avançar")
-        if (!elements.continueContainer.classList.contains('hidden')) {
-            handleContinue(); 
-        }
-        
-        // 2. Abre o teclado para o usuário (o foco reabre o teclado)
-        elements.userInput.focus(); 
-    }
     initializeApp();
 });

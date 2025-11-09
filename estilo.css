@@ -805,3 +805,72 @@ hr { border: none; border-top: 1px solid #dee2e6; margin: 25px 0; }
         overflow: hidden; /* O scroll deve ser gerenciado internamente */
     }
 }
+
+/* ================================================================ */
+/* 12. BOTÕES DE CONTINUAÇÃO/NOVO PROMPT (VERSÃO MINIMALISTA)       */
+/* ESTE BLOCO ESTÁ NO FINAL PARA ANULAR REGRAS ANTERIORES.          */
+/* ================================================================ */
+
+#continue-container {
+    position: absolute;
+    bottom: 60px; /* Reduzindo a distância do rodapé para economizar espaço */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50; 
+    background-color: transparent; /* Removendo o fundo do container */
+    padding: 0; /* Removendo o padding do container */
+    border-radius: 8px;
+    box-shadow: none; /* Removendo a sombra para um look mais limpo */
+    display: flex;
+    gap: 10px;
+    justify-content: center; 
+    align-items: center; 
+}
+
+#continue-container.hidden {
+    display: none;
+}
+
+/* ESTILO MINIMALISTA PARA 'CONTINUAR' (Básico) */
+#continue-btn { 
+    padding: 4px 8px;          /* Padding mínimo */
+    background-color: transparent; /* Fundo transparente */
+    color: #495057;            /* Cor do texto discreta (cinza escuro) */
+    border: 1px solid #ccc;    /* Borda sutil */
+    border-radius: 4px;        /* Formato sutilmente quadrado */
+    cursor: pointer;
+    font-size: 0.8em;          /* Fonte pequena para economizar verticalmente */
+    font-weight: normal;
+    transition: all 0.2s;
+    min-width: 90px;           
+    height: 30px;              /* Altura reduzida */
+    box-sizing: border-box;
+}
+
+#continue-btn:hover {
+    background-color: #f0f2f5; /* Leve destaque no hover */
+    border-color: #4A90E2;     /* Destaque primário na borda */
+}
+
+/* ESTILO PARA 'OK / NOVO PROMPT' (Proeminente) */
+/* ESTILO PARA 'OK / CONCLUIR' (Cor igual ao Continuar) */
+#continue-typing-btn { 
+    /* Design: Básico, mas com texto mais forte */
+    padding: 4px 8px;          /* Padding mínimo */
+    background-color: transparent; /* Fundo transparente (igual ao continue-btn) */
+    color: #495057;            /* Cor do texto discreta */
+    border: 1px solid #ccc;    /* Borda sutil */
+    border-radius: 4px;        /* Formato sutilmente quadrado */
+    cursor: pointer;
+    font-size: 0.8em;          /* Fonte pequena */
+    font-weight: bold;         /* MANTIDO BOLD para ser o botão de AÇÃO/CONCLUSÃO */
+    transition: all 0.2s;
+    min-width: 120px; 
+    height: 30px;              
+    box-sizing: border-box;
+}
+
+#continue-typing-btn:hover {
+    background-color: #f0f2f5; /* Leve destaque no hover (igual ao continue-btn) */
+    border-color: #4A90E2;     /* Destaque primário na borda */
+}
