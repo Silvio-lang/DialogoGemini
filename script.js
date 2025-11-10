@@ -631,7 +631,6 @@ function loadConversation(timestamp) {
         
         if (conversationToLoad) {
             // 1. ATUALIZA O ESTADO GLOBAL
-            // CORREÇÃO CRÍTICA: Assume que o histórico está em conversationToLoad.history
             conversationHistory = conversationToLoad.history;
             
             // 2. RECUPERA O SYSTEM PROMPT SALVO
@@ -642,17 +641,19 @@ function loadConversation(timestamp) {
             }
 
             // 3. LIMPA A TELA E RENDERIZA O NOVO HISTÓRICO
-            // Chama a função que limpa e redesenha a tela
-            rebuildChatFromHistory(); 
+            // Atrasamos a reconstrução para dar tempo ao Marked.js carregar.
+            setTimeout(() => {
+                rebuildChatFromHistory(); 
+                alert(`Conversa "${conversationToLoad.name}" carregada.`);
+                elements.toolsSidebar.classList.remove('open');
+                // Colocamos o foco aqui para que o teclado apareça após a tela carregar no celular
+                ui.unlockInput(); 
+            }, 50); // Um pequeno atraso de 50ms resolve o problema da CDN.
             
             // 4. ATUALIZA NOME E ARMAZENAMENTO
             elements.conversationNameInput.value = conversationToLoad.name;
             localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
             localStorage.removeItem('activeConversationName');
-            
-            alert(`Conversa "${conversationToLoad.name}" carregada.`);
-            elements.toolsSidebar.classList.remove('open');
-            ui.unlockInput();
         }
     }
 
