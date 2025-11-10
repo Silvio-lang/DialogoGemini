@@ -88,16 +88,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = true;
         },
 // Localize a função ui.unlockInput:
-        unlockInput: () => {
-            if (elements.userInput) elements.userInput.disabled = false;
-            const hasText = elements.userInput.value.length > 0;
-            const hasImage = attachedImage.base64 !== null;
-            if (elements.sendLevel1Btn) elements.sendLevel1Btn.disabled = !hasText && !hasImage;
-            if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = !hasText && !hasImage;
-            if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = !hasText && !hasImage;
-            // CORREÇÃO CRÍTICA PARA O FOCO NO CELULAR:
-            if (elements.userInput) elements.userInput.focus(); 
-        }
+unlockInput: () => {
+            if (elements.userInput) elements.userInput.disabled = false;
+            const hasText = elements.userInput.value.length > 0;
+            const hasImage = attachedImage.base64 !== null;
+            if (elements.sendLevel1Btn) elements.sendLevel1Btn.disabled = !hasText && !hasImage;
+            if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = !hasText && !hasImage;
+            if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = !hasText && !hasImage;
+             
+             // ESTA LINHA DEVE SER REMOVIDA:
+            // if (elements.userInput) elements.userInput.focus();
+        }
     };
 
     // ================================================================
