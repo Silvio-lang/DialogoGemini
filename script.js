@@ -623,22 +623,33 @@ async function handleNewPrompt(level = 3) {
         renderSavedConversations();
     }
 
-    function loadConversation(timestamp) {
+function loadConversation(timestamp) {
         stopTypingFlag = true;
         currentFileName = null;
         const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || [];
         const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp);
+        
         if (conversationToLoad) {
+            // 1. ATUALIZA O ESTADO GLOBAL
+            // CORREÇÃO CRÍTICA: Assume que o histórico está em conversationToLoad.history
             conversationHistory = conversationToLoad.history;
-            rebuildChatFromHistory();
-            elements.conversationNameInput.value = conversationToLoad.name;
+            
+            // 2. RECUPERA O SYSTEM PROMPT SALVO
             if (conversationHistory.systemPrompt) {
-                elements.systemPromptInput.value = conversationToLoad.systemPrompt;
+                elements.systemPromptInput.value = conversationHistory.systemPrompt;
             } else {
-                elements.systemPromptInput.value = DEFAULT_SYSTEM_PROMPT;
+                conversationHistory.systemPrompt = elements.systemPromptInput.value;
             }
+
+            // 3. LIMPA A TELA E RENDERIZA O NOVO HISTÓRICO
+            // Chama a função que limpa e redesenha a tela
+            rebuildChatFromHistory(); 
+            
+            // 4. ATUALIZA NOME E ARMAZENAMENTO
+            elements.conversationNameInput.value = conversationToLoad.name;
             localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
             localStorage.removeItem('activeConversationName');
+            
             alert(`Conversa "${conversationToLoad.name}" carregada.`);
             elements.toolsSidebar.classList.remove('open');
             ui.unlockInput();
