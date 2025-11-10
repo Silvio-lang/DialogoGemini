@@ -648,7 +648,7 @@ function loadConversation(timestamp) {
                 elements.toolsSidebar.classList.remove('open');
                 // Colocamos o foco aqui para que o teclado apareça após a tela carregar no celular
                 ui.unlockInput(); 
-            }, 200); // Um pequeno atraso de 50ms resolve o problema da CDN.
+            }, 400); // Um pequeno atraso de 50ms resolve o problema da CDN.
             
             // 4. ATUALIZA NOME E ARMAZENAMENTO
             elements.conversationNameInput.value = conversationToLoad.name;
@@ -1018,4 +1018,5 @@ function setupImageUpload() {
     });
 }
     initializeApp();
+
 });
