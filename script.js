@@ -227,6 +227,14 @@ unlockInput: () => {
         
         if (tokenLimitReached && (level === 3) && !isSingleBlockMode) { 
             isTyping = false;
+// CÓDIGO DO MARCADOR DE PAUSA
+            const targetParagraph = currentMessageContentContainer.lastElementChild;
+            const pauseMarker = document.createElement('span');
+            pauseMarker.textContent = ' ◼︎ '; // Adiciona o bloco separador
+            pauseMarker.style.fontWeight = '900';
+            pauseMarker.style.color = '#000000'; // Estava aqui
+            targetParagraph.appendChild(pauseMarker);
+// FIM DO CÓDIGO DO MARCADOR
             ui.showContinueBtn();
             elements.continueBtn.classList.remove('hidden'); 
             elements.continueTypingBtn.classList.remove('hidden'); 
