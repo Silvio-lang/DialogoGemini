@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSentenceIndex = 0;
     let sentenceCountSincePause = 0;
     let tokensDisplayedSincePause = 0; 
-    const TOKEN_LIMIT_PER_CHUNK = 200; 
+    const TOKEN_LIMIT_PER_CHUNK = 400; 
     
     let attachedImage = { base64: null, mimeType: null };
 
@@ -1030,4 +1030,5 @@ function setupImageUpload() {
     });
 }
     initializeApp();
+
 });
