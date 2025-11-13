@@ -24,7 +24,15 @@
         <button id="close-sidebar-btn" class="close-btn">×</button>
     </div>
     <div class="sidebar-content">
-        <div class="tool-section"><h3>Instrução do Assistente (Persona)</h3><p class="tool-description">Defina o comportamento principal do assistente.</p><textarea id="system-prompt-input" rows="5" placeholder="Ex: Aja como um chef..."></textarea></div><hr>
+        <div class="tool-section">
+    <h3>Instrução do Assistente (Persona)</h3>
+    
+    <p class="tool-description" style="font-weight: bold;">
+        (Esta instrução é editável, mesmo durante a conversa)
+    </p>
+    <textarea id="system-prompt-input" rows="5" placeholder="Ex: Aja como um chef..."></textarea>
+</div>
+<hr>
         <div class="tool-section"><h3>Analisador de Conversa</h3><p class="tool-description">Gera resumos e extrai informações-chave da conversa atual.</p><button id="analyze-title-btn" class="sidebar-btn">Gerar Título</button><button id="analyze-topics-btn" class="sidebar-btn" style="margin-top: 10px;">Extrair Tópicos</button><button id="analyze-summary-btn" class="sidebar-btn" style="margin-top: 10px;">Tópicos com Descrição</button><button id="analyze-detailed-btn" class="sidebar-btn" style="margin-top: 10px;">Resumo Detalhado</button></div><hr>
         <div class="tool-section"><h3>Acesso Rápido (neste navegador)</h3><p class="tool-description">Salva um atalho da conversa na lista abaixo.</p><input type="text" id="conversation-name-input" placeholder="Dê um nome para o atalho..."><button id="save-conversation-btn" class="sidebar-btn">Salvar no Navegador</button></div><hr>
 
@@ -132,3 +140,4 @@
 </body>
 
 </html>
+
