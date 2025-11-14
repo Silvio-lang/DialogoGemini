@@ -1,176 +1,141 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Árvore Genealógica</title>
-    <link rel="stylesheet" href="arvore_style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DiálogoGemini</title>
+
+    <script>
+        document.addEventListener('touchmove', function (event) {
+            if (event.scale !== 1 && event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+
+    <link rel="stylesheet" href="./estilo.css">
 </head>
 <body>
-   <div id="loadingMessage" style="display:none; position:fixed; top:0; left:0; width:100%; background:#fff3cd; color:#664d03; font-weight:bold; text-align:center; padding:1em; z-index:1000; border-bottom: 1px solid #ffc107;">Carregando...</div>
-    <div class="container">
-        <header>
-            <h1>🌳 Árvore Genealógica</h1>
-            <p>Para construir e lembrar a história da família</p>
-        </header>
-        <nav>
-            <button id="btnRefugio" style="display: none;">🏠 Início</button>
-        </nav>
-        
-<section id="secAbertura">
-            <img src="arvore_familia.png" alt="Árvore Genealógica da Família" class="imagem-abertura">
-            
-            <!-- NOVO: Container que permite o alinhamento horizontal (FLEX) -->
-            <div id="hub-botoes"> 
-                <button id="btnGerenciarHub" class="hub-button">🔍 Lista/Pessoas</button>
-                <button id="btnNovaPessoaHub" class="hub-button">➕ Incluir Nova Pessoa</button>
-                <button id="btnVerAniversarios" class="hub-button">🎂 Aniversariantes do Mês🎈🎈</button>
-            </div>
-        </section>
-       
-        <section id="secNovaPessoa">
-            <h2>Incluindo Nova Pessoa</h2>
-            <form id="pessoaForm">
-                <label>Nome completo:</label>
-                <input type="text" id="nome" required>
-                <label>Sexo:</label>
-                <select id="sexo">
-                    <option value="">Selecione...</option>
-                    <option value="M">Masculino</option>
-                    <option value="F">Feminino</option>
-                </select>
-                <label>Nascimento:</label>
-                <input type="text" id="nascimento" placeholder="DD/MM/AAAA">
-                <label>Falecimento (opcional):</label>
-                <input type="text" id="falecimento">
-                <label>Profissão (opcional):</label>
-                <input type="text" id="profissao">
-                <label>Cidade/País principal (opcional):</label>
-                <input type="text" id="cidade_pais">
-                <button type="submit">Salvar Registro</button>
-                <button type="button" id="btnCancelarInclusao">Cancelar</button>
-            </form>
-            <div id="registroAtualContainer">Nenhum registro criado nesta sessão.</div>
-        </section>
-        
-<section id="secGerenciar">
-            <h2>Registros</h2>
-            
-            <!-- NOVO CONTAINER: Agrupa os filtros em uma coluna (COM A ESTRUTURA CORRETA) -->
-            <div id="filtrosContainer">
-                
-                <div class="filtro-grupo">
-                    <label for="filtroNome">Filtrar por Nome ou Sobrenome:</label>
-                    <input type="text" id="filtroNome">
-                </div>
-                
-                <div class="filtro-grupo">
-                    <label for="filtroCidadePais">Filtrar por Cidade, País ou Local:</label>
-                    <input type="text" id="filtroCidadePais">
-                </div>
-                
-            </div>
-            <!-- FIM DO CONTAINER DE FILTROS -->
-            
-            <div id="botoesAcaoGlobais">
-                <button id="btnVisualizarSelecionado">👨‍👩‍👦‍👦 Visualizar Família de:</button>
-            </div>
-            <div id="registrosLista"></div>
-        </section>
-        
-        <!-- O bloco secAniversariantes deve vir DEPOIS de secGerenciar -->
-        <section id="secAniversariantes" style="display:none;">
-            <h2>🎂 Aniversariantes do Mês: <span id="mesAtual"></span></h2>
-            <div id="aniversariantesLista">
-                <!-- Lista de aniversariantes será gerada aqui -->
-                <p>Carregando aniversariantes...</p>
-            </div>
-        </section>
 
-        <section id="secVisualizarArvore">
-            <h2 style="text-align: center;">Árvore Genealógica - Visualização</h2>
-            <div class="form-group">
-                <label for="inputPessoaCentral">Buscar e selecionar a pessoa central da árvore:</label>
-                <input type="text" id="inputPessoaCentral" list="listaPessoas" class="form-control" placeholder="Digite um nome para buscar...">
-                <datalist id="listaPessoas">
-                    </datalist>
-            </div>
-            <button id="btnEditarNaArvore" style="display: none; margin-top: 10px; background-color: #ee9b00;">✏️ Editar Pessoa Central</button>
-            <div id="arvoreContainer"></div>
-        </section>
-        
-        <section id="secEditarPessoa">
-            <h2>Editar Registro</h2>
-            <form id="editarForm">
-               <!--  <label>ID:</label>  -->
-               <!-- <input type="text" id="edit-id" readonly>  -->
-                <label>Nome completo:</label>
-                <input type="text" id="edit-nome">
-                <label>Sexo:</label>
-                <select id="edit-sexo">
-                    <option value="">Selecione...</option>
-                    <option value="M">Masculino</option>
-                    <option value="F">Feminino</option>
-                </select>
-                <label>Nascimento:</label>
-                <input type="text" id="edit-nascimento">
-                <label>Falecimento:</label>
-                <input type="text" id="edit-falecimento">
-                <label>Profissão:</label>
-                <input type="text" id="edit-profissao">
-                <label>Cidade/País principal:</label>
-                <input type="text" id="edit-cidade_pais">
-                <button type="button" id="btnSalvarEdicao">Salvar Alterações</button>
-                <button type="button" id="btnExcluirRegistro">Excluir Registro</button>
-                <button type="button" id="btnCancelarEditar">Cancelar</button>
-            </form>
-            <div id="vinculosSection" style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #ddd;">
-                <h3 id="labelNomePessoaEditada" class="vinculo-pessoa-nome">Editando Pessoa: [Nome]</h3>
-                <h3>Vínculos Atuais:</h3>
-                <div id="vinculosLista"></div>
+<!-- SIDEBAR DE FERRAMENTAS -->
+<div id="tools-sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <h2>Ferramentas</h2>
+        <button id="close-sidebar-btn" class="close-btn">×</button>
+    </div>
+    <div class="sidebar-content">
+<div class="tool-section">
+    <h3>Instrução do Assistente (Persona)</h3>
+    
+    <p class="tool-description" style="font-weight: bold;">
+        (Esta instrução é editável, mesmo durante a conversa)
+    </p>
+    <textarea id="system-prompt-input" rows="5" placeholder="Ex: Aja como um chef..."></textarea>
+</div>
+<hr>
+        <div class="tool-section"><h3>Analisador de Conversa</h3><p class="tool-description">Gera resumos e extrai informações-chave da conversa atual.</p><button id="analyze-title-btn" class="sidebar-btn">Gerar Título</button><button id="analyze-topics-btn" class="sidebar-btn" style="margin-top: 10px;">Extrair Tópicos</button><button id="analyze-summary-btn" class="sidebar-btn" style="margin-top: 10px;">Tópicos com Descrição</button><button id="analyze-detailed-btn" class="sidebar-btn" style="margin-top: 10px;">Resumo Detalhado</button></div><hr>
+        <div class="tool-section"><h3>Acesso Rápido (neste navegador)</h3><p class="tool-description">Salva um atalho da conversa na lista abaixo.</p><input type="text" id="conversation-name-input" placeholder="Dê um nome para o atalho..."><button id="save-conversation-btn" class="sidebar-btn">Salvar no Navegador</button></div><hr>
 
-<div class="vinculo-creator">
-    <h3>Novo Vinculo:</h3>
-  <dir id="escolha-vínculo"></div>
-    <strong id="nomePessoaPrincipalVinculo" class="vinculo-pessoa-nome"></strong>
-    <select id="selectRelacao">
-        <option value="filho">é filho(a) de</option>
-        <option value="pai">é pai/mãe de</option>
-        <option value="conjuge">é cônjuge de</option>
-    </select>
-    <select id="selectPessoaVinculo">
-        <option value="">Selecione uma pessoa...</option>
-    </select>
-    <button type="button" id="btnAdicionarVinculo">Salvar Vínculo</button>
+<div class="tool-section"><h3>Contagem de Contexto</h3><p class="tool-description">Tokens enviados e recebidos na conversa atual.</p><div id="context-meter" style="font-weight: bold; color: #007bff;">Contexto: ~0 tokens</div></div><hr>
+
+        <div class="tool-section"><h3>Conversas de Acesso Rápido</h3><div id="saved-conversations-list"></div></div><hr>
+        <div class="tool-section"><h3>Backup / Transferência (Arquivos)</h3><p class="tool-description">Use para salvar um arquivo no seu computador.</p>
+        <span id="file-name-display" class="file-display-sidebar"></span>
+        <button id="import-conversation-btn" class="sidebar-btn">Importar de Arquivo (.json)</button><button id="export-json-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar para Backup (.json)</button><button id="export-md-btn" class="sidebar-btn" style="margin-top: 10px;">Exportar para Leitura (.md)</button></div><hr>
+        <!-- SEÇÃO DE CONTROLES DO SIDEBAR (SLIDER) -->
+        <div class="tool-section">
+            <h3>Controles de Chat</h3>
+            <div class="sidebar-control-group">
+                <label for="speed-slider-sidebar" class="sidebar-label">Velocidade</label>
+                <input type="range" id="speed-slider-sidebar" min="50" max="250" value="180">
+            </div>
+        </div>
+        <hr>
+        <div class="tool-section"><h3>Configurações</h3><a href="#" id="change-api-key-link" class="sidebar-link">Alterar Chave API 🔑</a></div>
+    </div>
 </div>
 
-            </div>
-        </section>
-        
-        <footer>
-            <button id="btnExportarJSON">SALVAR DADOS</button>
-            <button id="btnImportarJSON">CARREGAR</button>
-            <button id="btnSalvarSupabase" style="display: none;">☁️ Salvar na Nuvem</button>
-            <button id="btnCarregarSupabase" style="display: none;">⬇️ Carregar da Nuvem</button>
-            <button id="btnDicas" title="Dicas de Uso">💡</button>
-            <input type="file" id="inputImportJSON" accept=".json,.txt" style="display: none;">
-        </footer>
-    </div>
-<div id="dicasModal" class="modal">
+<!-- MODAL DA CHAVE DE API -->
+<div id="api-key-modal" class="modal-overlay hidden">
     <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h3>Instruções e Dicas</h3>
-        <div class="dicas-nav">
-            <button id="btnDicaAnterior" title="Dica anterior">&#9664;</button>
-            <span id="dicaContador">0 / 0</span>
-            <button id="btnDicaProxima" title="Próxima dica">&#9654;</button>
-        </div>
-        <div class="dica-content-wrapper">
-            <p id="dicaTexto">Carregando dicas...</p>
-        </div>
+        <h2>Chave da API do Google Gemini</h2>
+        <p>Por favor, insira sua chave da API para começar a usar o chat. Sua chave será salva apenas no seu navegador.</p>
+        <input type="password" id="api-key-input" placeholder="Cole sua chave aqui..." autocomplete="off">
+        <button id="save-api-key-btn">Salvar e Iniciar</button>
     </div>
 </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="arvore_script.js"></script>
+
+<!-- MODAL DE CONFIRMAÇÃO (AGORA FUNCIONA!) -->
+
+
+<!-- CONTÊINER PRINCIPAL DA APLICAÇÃO -->
+<div id="app-container">
+    <header class="main-header">
+        <h1>DiálogoGemini</h1>
+        <div class="header-controls-right">
+            <a href="#" id="new-chat-link" class="header-link">Nova Conversa</a>
+            <button id="open-sidebar-btn" class="tools-btn" title="Ferramentas e Configurações">⚙️</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="chat-window"></div>
+        <div id="loading-indicator" class="hidden"><div class="spinner"></div></div>
+
+        <div id="continue-container" class="hidden">
+        <button id="continue-btn">Continuar</button>
+        <button id="continue-typing-btn" class="action-btn-ok">OK, obrigado.</button>
+        </div>
+    </main>
+
+<footer>
+       <div id="prompt-container">
+    
+        <!-- SOMENTE A CAIXA DE TEXTO E O BOTÃO DE LIMPAR -->
+        <textarea id="user-input" placeholder="Digite sua mensagem ou anexe uma imagem..." rows="1" disabled></textarea>
+        <button id="clear-prompt-btn" class="hidden" title="Limpar campo">🧹</button>
+        
+        <!-- BOTÕES DE BUSCA (ESCONDIDOS) -->
+        <button id="search-btn" class="hidden">Buscar</button>
+        <button id="clear-search-btn" class="hidden">Limpar</button>
+
+    </div>
+        
+        <div id="controls-right">
+             <div id="action-controls-right">
+                <!-- ÍCONES DE AÇÃO GRANDE (LINHA DE BAIXO) -->
+                <button id="toggle-search-btn" title="Alternar para Busca" class="control-footer-btn">🔍</button>
+                <button id="attach-file-btn" title="Anexar Imagem" class="control-footer-btn">📎</button>
+                
+                <!-- ELEMENTOS DE IMAGEM MOVIDOS PARA AQUI -->
+                <input type="file" id="image-input" accept="image/*" class="hidden">
+                <div id="image-preview-container" class="hidden">
+                    <img id="image-preview" src="" alt="Pré-visualização da imagem">
+                    <button id="remove-image-btn">×</button>
+                </div>
+                
+                <!-- CHECKBOX "BLOCO ÚNICO" INSERIDO AQUI -->
+                <label class="toggle-switch-label main-toggle-label" title="Alternar para resposta em bloco único, sem pausas">
+                    <input type="checkbox" id="response-mode-toggle">
+                    <span class="slider"></span>
+                    Bloco Único
+                </label>
+                
+                <!-- BOTÕES DE NÍVEL (1, 2, 3) NA HORIZONTAL -->
+                <div class="send-level-group">
+                    <button id="send-level-1-btn" class="level-btn" title="Enviar para resposta curta" disabled>1</button>
+                    <button id="send-level-2-btn" class="level-btn" title="Enviar para resposta média" disabled>2</button>
+                    <button id="send-level-3-btn" class="level-btn" title="Enviar para resposta completa" disabled>3</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+<!--  <script src="./marked.min.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="./script.js"></script>
+
 </body>
 </html>
