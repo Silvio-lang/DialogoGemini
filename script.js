@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let attachedImage = { base64: null, mimeType: null };
 
     const ACTIVE_CONVERSATION_KEY = 'activeConversation';
-    const DEFAULT_SYSTEM_PROMPT = "Você é o DiálogoGemini, um assistente de IA prestativo e amigável. Responda em português do Brasil.";
+    const DEFAULT_SYSTEM_PROMPT = "Você é um assistente de IA prestativo e amigável. Responda em português do Brasil. Se o usuário abrir uma oportunidade, pergunte-lhe se há alguma coisa que não goste nas conversas com IA, se prefere que você use o tratamento 'senhor, senhora' ou 'você', e se há alguma coisa que quer que você leve em consideração ao responder.";
     
     // ================================================================
     // 3. FUNÇÕES DE UI
@@ -308,13 +308,13 @@ async function handleNewPrompt(level = 3) {
 
     const userMessageText = elements.userInput.value.trim();
 
-    let promptPrefix = "";
+let promptPrefix = "";
     switch (level) {
         case 1:
-            promptPrefix = "Responda objetivamente, de forma curta e direta: "; 
+            promptPrefix = "Responda objetivamente, de forma curta e direta, finalizando a frase de forma completa e evitando abreviações no final: "; 
             break;
         case 2:
-            promptPrefix = "Se for possível, responda em no máximo 2 parágrafos, de forma concisa: ";
+            promptPrefix = "Se for possível, responda em no máximo 2 parágrafos. Finalize o texto de forma completa, não considerando abreviações como 'etc. ' como final de frase: ";
             break;
         case 3:
         default:
@@ -396,18 +396,28 @@ async function handleNewPrompt(level = 3) {
         }
         apiFormattedHistory.push({ role: 'user', parts: finalUserPromptParts });
 
-        let generationConfig = {};
+let generationConfig = {};
+        const stopSequence = ['. ']; // Define a sequência de parada: ponto e espaço
+
         switch (level) {
-            case 1: 
-                generationConfig = { maxOutputTokens: 50, temperature: 0.2, topP: 0.8 }; break;
+            case 1:
+                // Bloco Curto (Teclas 1): Limite de tokens baixo com segurança de parada
+                generationConfig = { maxOutputTokens: 50, temperature: 0.2, topP: 0.8, stopSequences: stopSequence }; 
+                break;
             case 2:
-                generationConfig = { maxOutputTokens: 200, temperature: 0.5, topP: 0.9 }; break;
+                // Bloco Médio (Teclas 2): Limite de tokens intermediário com segurança de parada
+                generationConfig = { maxOutputTokens: 200, temperature: 0.5, topP: 0.9, stopSequences: stopSequence }; 
+                break;
             case 3:
             default:
-                generationConfig = { maxOutputTokens: 2048, temperature: 0.7, topP: 1.0 }; break;
+                // Bloco Completo (Teclas 3/ENTER): Limite de tokens alto, SEM stopSequences
+                // Não adicionamos stopSequences para não interferir na geração contínua, se necessário.
+                generationConfig = { maxOutputTokens: 2048, temperature: 0.7, topP: 1.0 }; 
+                break;
         }
 
         const requestBody = { contents: apiFormattedHistory, generationConfig: generationConfig };
+
         const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
 
         document.getElementById('remove-image-btn').click();
@@ -1030,5 +1040,4 @@ function setupImageUpload() {
     });
 }
     initializeApp();
-
 });
