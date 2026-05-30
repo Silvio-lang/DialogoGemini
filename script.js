@@ -87,18 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = true;
             if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = true;
         },
-// Localize a função ui.unlockInput:
-unlockInput: () => {
-            if (elements.userInput) elements.userInput.disabled = false;
-            const hasText = elements.userInput.value.length > 0;
-            const hasImage = attachedImage.base64 !== null;
-            if (elements.sendLevel1Btn) elements.sendLevel1Btn.disabled = !hasText && !hasImage;
-            if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = !hasText && !hasImage;
-            if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = !hasText && !hasImage;
-             
-             // ESTA LINHA DEVE SER REMOVIDA:
-            // if (elements.userInput) elements.userInput.focus();
-        }
+        unlockInput: () => {
+            if (elements.userInput) elements.userInput.disabled = false;
+            const hasText = elements.userInput.value.length > 0;
+            const hasImage = attachedImage.base64 !== null;
+            if (elements.sendLevel1Btn) elements.sendLevel1Btn.disabled = !hasText && !hasImage;
+            if (elements.sendLevel2Btn) elements.sendLevel2Btn.disabled = !hasText && !hasImage;
+            if (elements.sendLevel3Btn) elements.sendLevel3Btn.disabled = !hasText && !hasImage;
+        }
     };
 
     // ================================================================
@@ -119,14 +115,12 @@ unlockInput: () => {
                 const loadedHistory = JSON.parse(savedState);
                 if (loadedHistory && Array.isArray(loadedHistory.messages)) {
                     conversationHistory = loadedHistory;
-                    
                     if (conversationHistory.messages.length === 1 && conversationHistory.messages[0]?.role === 'model') {
                         localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
                         localStorage.removeItem('activeConversationName');
                         conversationHistory = { messages: [], systemPrompt: loadedHistory.systemPrompt || null };
                         return false; 
                     }
-                    
                     rebuildChatFromHistory();
                     if (conversationHistory.systemPrompt) {
                         elements.systemPromptInput.value = conversationHistory.systemPrompt;
@@ -199,9 +193,7 @@ unlockInput: () => {
                 const remainingWords = sentence.trim().substring(targetParagraph.textContent.length).trim();
                 targetParagraph.textContent += remainingWords;
                 targetParagraph.innerHTML = marked.parse(targetParagraph.textContent.trim());
-                
                 renderRestOfQueueStatically();
-                
                 ui.unlockInput();
                 return; 
             }
@@ -209,7 +201,6 @@ unlockInput: () => {
             elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
             const interval = 300 - typingSpeed;
             await new Promise(resolve => setTimeout(resolve, interval));
-            
             tokensDisplayedSincePause += 4; 
         }
         const renderedSentences = (targetParagraph.textContent).trim();
@@ -219,22 +210,18 @@ unlockInput: () => {
         sentenceCountSincePause++;
         
         const isSingleBlockMode = elements.responseModeToggle ? elements.responseModeToggle.checked : false;
-        
         const lastUserPrompt = conversationHistory.messages.slice().reverse().find(msg => msg.role === 'user');
         const level = lastUserPrompt ? lastUserPrompt.level : 3;
-
         const tokenLimitReached = tokensDisplayedSincePause >= TOKEN_LIMIT_PER_CHUNK; 
         
         if (tokenLimitReached && (level === 3) && !isSingleBlockMode) { 
             isTyping = false;
-// CÓDIGO DO MARCADOR DE PAUSA
             const targetParagraph = currentMessageContentContainer.lastElementChild;
             const pauseMarker = document.createElement('span');
-            pauseMarker.textContent = ' ◼︎ '; // Adiciona o bloco separador
+            pauseMarker.textContent = ' ◼︎ ';
             pauseMarker.style.fontWeight = '900';
-            pauseMarker.style.color = '#000000'; // Estava aqui
+            pauseMarker.style.color = '#000000';
             targetParagraph.appendChild(pauseMarker);
-// FIM DO CÓDIGO DO MARCADOR
             ui.showContinueBtn();
             elements.continueBtn.classList.remove('hidden'); 
             elements.continueTypingBtn.classList.remove('hidden'); 
@@ -248,7 +235,6 @@ unlockInput: () => {
     function renderRestOfQueueStatically() {
         const contentContainer = currentMessageContentContainer;
         if (!contentContainer) return;
-        
         const targetParagraph = contentContainer.lastElementChild;
         if (currentSentenceIndex < currentParagraphSentences.length) {
             const remainingSentenceText = currentParagraphSentences.slice(currentSentenceIndex).join('');
@@ -256,203 +242,175 @@ unlockInput: () => {
         }
         const parsedRemainingText = marked.parse(targetParagraph.textContent.trim());
         targetParagraph.innerHTML = parsedRemainingText;
-
         const remainingText = responseQueue.map(p => `<p>${marked.parse(p)}</p>`).join('');
         contentContainer.innerHTML += remainingText;
-        
         responseQueue = [];
         stopTypingFlag = true;
         elements.chatWindow.scrollTop = elements.chatWindow.scrollHeight;
     }
 
-function handleContinue() {
-        // CORREÇÃO: Força a remoção do foco para não abrir o teclado no celular.
+    function handleContinue() {
         elements.userInput.blur();
-        
         ui.hideContinueBtn();
         elements.continueBtn.classList.add('hidden');
         elements.continueTypingBtn.classList.add('hidden');
-        
         sentenceCountSincePause = 0;
         tokensDisplayedSincePause = 0;
-        
         if (currentMessageContentContainer && currentParagraphSentences.length > 0) {
             const targetParagraph = currentMessageContentContainer.lastElementChild;
             const remainingText = targetParagraph.textContent.trim();
             targetParagraph.innerHTML = marked.parse(remainingText);
         }
-        
         processNextQueueItem();
     }
 
-function handleStartNewPrompt() {
+    function handleStartNewPrompt() {
         stopTypingFlag = true;
         ui.hideContinueBtn();
         elements.continueBtn.classList.add('hidden'); 
         elements.continueTypingBtn.classList.add('hidden'); 
-        
         ui.unlockInput();
-        // Não chamamos focus() aqui para evitar teclado indesejado no celular.
     }
+
     // ================================================================
     // 6. FUNÇÕES PRINCIPAIS E DE LÓGICA
     // ================================================================
     function addSafeEventListener(element, event, handler) { if (element) { element.addEventListener(event, handler); } }
 
-async function handleNewPrompt(level = 3) {
-    elements.userInput.blur();
-    if (isTyping) {
-        stopTypingFlag = true;
-        await new Promise(resolve => setTimeout(resolve, Math.max(300 - typingSpeed, 50))); 
-    }
-
-    const userMessageText = elements.userInput.value.trim();
-
-let promptPrefix = "";
-    switch (level) {
-        case 1:
-            promptPrefix = "Responda objetivamente, de forma curta e direta, finalizando a frase de forma completa e evitando abreviações no final: "; 
-            break;
-        case 2:
-            promptPrefix = "Se for possível, responda em no máximo 2 parágrafos. Finalize o texto de forma completa, não considerando abreviações como 'etc. ' como final de frase: ";
-            break;
-        case 3:
-        default:
-            promptPrefix = "";
-            break;
-    }
-
-    let contentToSendToAPI = userMessageText;
-    if (promptPrefix) { contentToSendToAPI = promptPrefix + userMessageText; }
-    if (promptPrefix && !userMessageText) { contentToSendToAPI = promptPrefix; }
-
-    if (!userMessageText && !attachedImage.base64) return;
-
-    ui.hideContinueBtn();
-    elements.continueBtn.classList.add('hidden'); 
-    elements.continueTypingBtn.classList.add('hidden'); 
-
-    let displayUserContent = userMessageText;
-    let feedbackPrefix = "";
-    switch (level) {
-        case 1:
-            feedbackPrefix = "  **Objetivamente:** ";
-            break;
-        case 2:
-            feedbackPrefix = "  **2 parágrafos:** ";
-            break;
-    }
-
-    if (feedbackPrefix && userMessageText) {
-        displayUserContent = feedbackPrefix + userMessageText;
-    } else if (feedbackPrefix && !userMessageText) {
-        displayUserContent = feedbackPrefix + "[Imagem anexada]";
-    } else if (!userMessageText && attachedImage.base64) {
-        displayUserContent = "[Imagem anexada]";
-    }
-
-    const userMessage = { role: 'user', content: displayUserContent, timestamp: new Date().toISOString(), level: level }; 
-    conversationHistory.messages.push(userMessage);
-    displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp);
-
-    saveActiveConversation();
-    updateContextMeter();
-    elements.userInput.value = '';
-    elements.userInput.style.height = 'auto';
-    ui.lockInput();
-    ui.showLoading();
-
-    try {
-        const apiKey = localStorage.getItem('geminiApiKey');
-        const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
-
-        const messageParts = [];
-        if (contentToSendToAPI) {
-            messageParts.push({ text: contentToSendToAPI });
-        }
-        if (attachedImage.base64) {
-            messageParts.push({
-                inline_data: {
-                    mime_type: attachedImage.mimeType,
-                    data: attachedImage.base64
-                }
-            });
+    async function handleNewPrompt(level = 3) {
+        elements.userInput.blur();
+        if (isTyping) {
+            stopTypingFlag = true;
+            await new Promise(resolve => setTimeout(resolve, Math.max(300 - typingSpeed, 50))); 
         }
 
-        const now = new Date();
-        const formattedDateTime = now.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
-        const userSystemPrompt = conversationHistory.systemPrompt || '';
-        const finalSystemPrompt = `${userSystemPrompt}\n\n[Instrução Crítica: A data e hora de hoje são EXATAMENTE ${formattedDateTime}.]`.trim();
-
-        const apiFormattedHistory = conversationHistory.messages.slice(0, -1).map(msg => ({
-            role: msg.role === 'model' ? 'model' : 'user',
-            parts: [{ text: msg.content.replace(/  \*\*(Objetivamente|2 parágrafos):(?:\s*\*\/)?\s\*\*/g, '').replace(/\[Imagem anexada\]/g, '').trim() }]
-        }));
-
-        let finalUserPromptParts = messageParts;
-        if (apiFormattedHistory.length === 0 && finalSystemPrompt) {
-            const systemPart = { text: `${finalSystemPrompt}\n\n---\n\n` };
-            finalUserPromptParts = [systemPart, ...messageParts];
-        }
-        apiFormattedHistory.push({ role: 'user', parts: finalUserPromptParts });
-
-let generationConfig = {};
-        const stopSequence = ['. ']; // Define a sequência de parada: ponto e espaço
-
+        const userMessageText = elements.userInput.value.trim();
+        let promptPrefix = "";
         switch (level) {
             case 1:
-                // Bloco Curto (Teclas 1): Limite de tokens baixo com segurança de parada
-                generationConfig = { maxOutputTokens: 50, temperature: 0.2, topP: 0.8, stopSequences: stopSequence }; 
+                promptPrefix = "Responda objetivamente, de forma curta e direta, finalizando a frase de forma completa e evitando abreviações no final: "; 
                 break;
             case 2:
-                // Bloco Médio (Teclas 2): Limite de tokens intermediário com segurança de parada
-                generationConfig = { maxOutputTokens: 200, temperature: 0.5, topP: 0.9, stopSequences: stopSequence }; 
+                promptPrefix = "Responda obrigatoriamente em exatamente 2 parágrafos distintos. Finalize o texto de forma completa, não considerando abreviações como 'etc. ' como final de frase: ";
                 break;
             case 3:
             default:
-                // Bloco Completo (Teclas 3/ENTER): Limite de tokens alto, SEM stopSequences
-                // Não adicionamos stopSequences para não interferir na geração contínua, se necessário.
-                generationConfig = { maxOutputTokens: 2048, temperature: 0.7, topP: 1.0 }; 
+                promptPrefix = "";
                 break;
         }
 
-        const requestBody = { contents: apiFormattedHistory, generationConfig: generationConfig };
+        let contentToSendToAPI = userMessageText;
+        if (promptPrefix) { contentToSendToAPI = promptPrefix + userMessageText; }
+        if (promptPrefix && !userMessageText) { contentToSendToAPI = promptPrefix; }
 
-        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+        if (!userMessageText && !attachedImage.base64) return;
 
-        document.getElementById('remove-image-btn').click();
+        ui.hideContinueBtn();
+        elements.continueBtn.classList.add('hidden'); 
+        elements.continueTypingBtn.classList.add('hidden'); 
 
-        if (!response.ok) {
-            let errorDetail = response.statusText;
-            try {
-                const errorBody = await response.json();
-                errorDetail = errorBody.error.message || response.statusText;
-            } catch (e) {}
-            throw new Error(`Erro da API (${response.status}): ${errorDetail}`);
+        let displayUserContent = userMessageText;
+        let feedbackPrefix = "";
+        switch (level) {
+            case 1: feedbackPrefix = "  **Objetivamente:** "; break;
+            case 2: feedbackPrefix = "  **2 parágrafos:** "; break;
         }
-        
-        const data = await response.json();
-        
-        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || data.candidates[0].content.parts.length === 0) {
-            throw new Error("Resposta da API não contém texto de candidato válido.");
-        }
-        
-        let fullResponseText = data.candidates[0].content.parts[0].text;
 
-        const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() };
-        conversationHistory.messages.push(modelMessage);
+        if (feedbackPrefix && userMessageText) {
+            displayUserContent = feedbackPrefix + userMessageText;
+        } else if (feedbackPrefix && !userMessageText) {
+            displayUserContent = feedbackPrefix + "[Imagem anexada]";
+        } else if (!userMessageText && attachedImage.base64) {
+            displayUserContent = "[Imagem anexada]";
+        }
+
+        const userMessage = { role: 'user', content: displayUserContent, timestamp: new Date().toISOString(), level: level }; 
+        conversationHistory.messages.push(userMessage);
+        displayStaticMessage(userMessage.content, userMessage.role, userMessage.timestamp);
+
         saveActiveConversation();
         updateContextMeter();
-        ui.hideLoading();
-        startResponseDisplay(fullResponseText);
+        elements.userInput.value = '';
+        elements.userInput.style.height = 'auto';
+        ui.lockInput();
+        ui.showLoading();
 
-    } catch (error) {
-        console.error("Erro detalhado:", error);
-        displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model', new Date().toISOString());
-        ui.hideLoading();
-        ui.unlockInput();
+        try {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            const API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+
+            const messageParts = [];
+            if (contentToSendToAPI) { messageParts.push({ text: contentToSendToAPI }); }
+            if (attachedImage.base64) {
+                messageParts.push({
+                    inline_data: { mime_type: attachedImage.mimeType, data: attachedImage.base64 }
+                });
+            }
+
+            const now = new Date();
+            const formattedDateTime = now.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
+            const userSystemPrompt = conversationHistory.systemPrompt || '';
+            const finalSystemPrompt = `${userSystemPrompt}\n\n[Instrução Crítica: A data e hora de hoje são EXATAMENTE ${formattedDateTime}.]`.trim();
+
+            const apiFormattedHistory = conversationHistory.messages.slice(0, -1).map(msg => ({
+                role: msg.role === 'model' ? 'model' : 'user',
+                parts: [{ text: msg.content.replace(/  \*\*(Objetivamente|2 parágrafos):(?:\s*\*\/)?\s\*\*/g, '').replace(/\[Imagem anexada\]/g, '').trim() }]
+            }));
+
+            let finalUserPromptParts = messageParts;
+            if (apiFormattedHistory.length === 0 && finalSystemPrompt) {
+                const systemPart = { text: `${finalSystemPrompt}\n\n---\n\n` };
+                finalUserPromptParts = [systemPart, ...messageParts];
+            }
+            apiFormattedHistory.push({ role: 'user', parts: finalUserPromptParts });
+
+            let generationConfig = {};
+            const stopSequence = ['. ']; 
+
+            switch (level) {
+                case 1:
+                    generationConfig = { maxOutputTokens: 50, temperature: 0.2, topP: 0.8, stopSequences: stopSequence }; 
+                    break;
+                case 2:
+                    generationConfig = { maxOutputTokens: 350, temperature: 0.4, topP: 0.9, stopSequences: stopSequence }; 
+                    break;
+                default:
+                    generationConfig = { maxOutputTokens: 2048, temperature: 0.7, topP: 1.0 }; 
+                    break;
+            }
+
+            const requestBody = { contents: apiFormattedHistory, generationConfig: generationConfig };
+            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+
+            document.getElementById('remove-image-btn').click();
+
+            if (!response.ok) {
+                let errorDetail = response.statusText;
+                try { const errorBody = await response.json(); errorDetail = errorBody.error.message || response.statusText; } catch (e) {}
+                throw new Error(`Erro da API (${response.status}): ${errorDetail}`);
+            }
+            
+            const data = await response.json();
+            if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+                throw new Error("Resposta da API inválida.");
+            }
+            
+            let fullResponseText = data.candidates[0].content.parts[0].text;
+            const modelMessage = { role: 'model', content: fullResponseText, timestamp: new Date().toISOString() };
+            conversationHistory.messages.push(modelMessage);
+            saveActiveConversation();
+            updateContextMeter();
+            ui.hideLoading();
+            startResponseDisplay(fullResponseText);
+
+        } catch (error) {
+            console.error("Erro detalhado:", error);
+            displayStaticMessage(`Ocorreu um erro: ${error.message}`, 'model', new Date().toISOString());
+            ui.hideLoading();
+            ui.unlockInput();
+        }
     }
-}
+
     async function callAnalysisAPI(instruction, analysisType) {
         if (conversationHistory.messages.length === 0) { alert("Não há conversa para analisar."); return; }
         if (isTyping) { alert("Aguarde a resposta atual terminar."); return; }
@@ -507,13 +465,10 @@ let generationConfig = {};
         elements.continueTypingBtn.classList.add('hidden');
         localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
         localStorage.removeItem('activeConversationName');
-        
         const welcomeMessage = { role: 'model', content: 'Olá! **DiálogoGemini** às ordens!', timestamp: new Date().toISOString() };
         conversationHistory.messages.push(welcomeMessage);
         displayStaticMessage(welcomeMessage.content, welcomeMessage.role, welcomeMessage.timestamp);
-        
         ui.unlockInput();
-        // REMOVIDO o foco automático aqui para evitar teclado no celular
         setTimeout(() => updateContextMeter(), 0);
     }
     
@@ -544,7 +499,6 @@ let generationConfig = {};
             elements.userInput.placeholder = "Digite sua mensagem ou anexe uma imagem...";
             clearSearch();
         }
-        // Chamada de foco mantida aqui pois o modo busca/entrada DEVE focar o input
         elements.userInput.focus(); 
     }
     
@@ -617,9 +571,6 @@ let generationConfig = {};
         }
     }
     
-    // ================================================================
-    // 7. FUNÇÕES DE GERENCIAMENTO DE CONVERSA
-    // ================================================================
     function updateContextMeter() {
         if (!elements.contextMeter) { return; }
         const totalChars = conversationHistory.messages.reduce((sum, message) => sum + (message.content ? message.content.length : 0), 0);
@@ -632,7 +583,6 @@ let generationConfig = {};
         const name = elements.conversationNameInput.value.trim();
         if (!name) { alert("Por favor, dê um nome para a conversa."); return; }
         if (conversationHistory.messages.length === 0) { alert("Não há nada para salvar."); return; }
-        
         const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || [];
         const newConversation = { name: name, history: conversationHistory, timestamp: new Date().toISOString() };
         const updatedConversations = savedConversations.filter(c => c.name !== name);
@@ -645,34 +595,21 @@ let generationConfig = {};
         renderSavedConversations();
     }
 
-function loadConversation(timestamp) {
+    function loadConversation(timestamp) {
         stopTypingFlag = true;
         currentFileName = null;
         const savedConversations = JSON.parse(localStorage.getItem('savedConversations')) || [];
         const conversationToLoad = savedConversations.find(c => c.timestamp === timestamp);
-        
         if (conversationToLoad) {
-            // 1. ATUALIZA O ESTADO GLOBAL
             conversationHistory = conversationToLoad.history;
-            
-            // 2. RECUPERA O SYSTEM PROMPT SALVO
-            if (conversationHistory.systemPrompt) {
-                elements.systemPromptInput.value = conversationHistory.systemPrompt;
-            } else {
-                conversationHistory.systemPrompt = elements.systemPromptInput.value;
-            }
-
-            // 3. LIMPA A TELA E RENDERIZA O NOVO HISTÓRICO
-            // Atrasamos a reconstrução para dar tempo ao Marked.js carregar.
+            if (conversationHistory.systemPrompt) { elements.systemPromptInput.value = conversationHistory.systemPrompt; }
+            else { conversationHistory.systemPrompt = elements.systemPromptInput.value; }
             setTimeout(() => {
                 rebuildChatFromHistory(); 
                 alert(`Conversa "${conversationToLoad.name}" carregada.`);
                 elements.toolsSidebar.classList.remove('open');
-                // Colocamos o foco aqui para que o teclado apareça após a tela carregar no celular
                 ui.unlockInput(); 
-            }, 400); // Um pequeno atraso de 50ms resolve o problema da CDN.
-            
-            // 4. ATUALIZA NOME E ARMAZENAMENTO
+            }, 400);
             elements.conversationNameInput.value = conversationToLoad.name;
             localStorage.removeItem(ACTIVE_CONVERSATION_KEY);
             localStorage.removeItem('activeConversationName');
@@ -792,24 +729,15 @@ function loadConversation(timestamp) {
         input.click();
     }
 
-    // CORREÇÃO FINAL: Combina preventDefault com setTimeout(0)
     function saveApiKey(event) {
-        event.preventDefault(); // IMPEDE O RECARREGAMENTO E O LOOP DO MODAL
-        
+        event.preventDefault();
         const apiKey = elements.apiKeyInput.value.trim();
         if (apiKey) {
             localStorage.setItem('geminiApiKey', apiKey);
             localStorage.removeItem('hasSeenTour'); 
-
-            // 1. FECHA O MODAL IMEDIATAMENTE
             if (elements.apiKeyModal) elements.apiKeyModal.classList.add('hidden');
-            
-            // 2. AGENDA O INÍCIO DO CHAT para 0ms depois
             setTimeout(startNewChat, 0); 
-            
-        } else {
-            alert("Por favor, insira uma chave de API válida.");
-        }
+        } else { alert("Por favor, insira uma chave de API válida."); }
     }
     
     function setupSpeedControl() {
@@ -823,20 +751,13 @@ function loadConversation(timestamp) {
             typingSpeed = parseInt(e.target.value, 10);
             localStorage.setItem('typingSpeed', typingSpeed);
         });
-        
         if (elements.responseModeToggle) {
             const savedSingleBlock = localStorage.getItem('singleBlockMode');
             elements.responseModeToggle.checked = savedSingleBlock === 'true';
         }
-        addSafeEventListener(elements.responseModeToggle, 'change', (e) => {
-             localStorage.setItem('singleBlockMode', e.target.checked);
-        });
+        addSafeEventListener(elements.responseModeToggle, 'change', (e) => { localStorage.setItem('singleBlockMode', e.target.checked); });
     }
 
-    // ================================================================
-    // 8. LÓGICA DO MODAL DE CONFIRMAÇÃO
-    // ================================================================
-    
     const confirmationModal = document.getElementById('confirmation-modal-overlay');
     const modalBtnCancel = document.getElementById('modal-btn-cancel');
     const modalBtnDiscard = document.getElementById('modal-btn-discard');
@@ -844,10 +765,7 @@ function loadConversation(timestamp) {
     let pendingAction = null;
     
     function showConfirmationModal(action) {
-        if (!confirmationModal) { 
-            if (typeof action === 'function') { action(); }
-            return;
-        }
+        if (!confirmationModal) { if (typeof action === 'function') { action(); } return; }
         if (conversationHistory.messages.length <= 1 && !localStorage.getItem(ACTIVE_CONVERSATION_KEY)) {
             if (typeof action === 'function') { action(); }
             hideConfirmationModal(); 
@@ -861,9 +779,6 @@ function loadConversation(timestamp) {
         if (confirmationModal) confirmationModal.classList.add('hidden');
     }
 
-    // ================================================================
-    // 9. LÓGICA DE INICIALIZAÇÃO E EVENT LISTENERS
-    // ================================================================
     function initializeApp() {
         addSafeEventListener(elements.userInput, 'input', () => {
             const hasText = elements.userInput.value.length > 0;
@@ -872,54 +787,35 @@ function loadConversation(timestamp) {
             elements.sendLevel1Btn.disabled = !hasText && !hasImage;
             elements.sendLevel2Btn.disabled = !hasText && !hasImage;
             elements.sendLevel3Btn.disabled = !hasText && !hasImage;
-            
             elements.userInput.style.height = 'auto';
             elements.userInput.style.height = `${elements.userInput.scrollHeight}px`;
         });
-        
         addSafeEventListener(elements.conversationNameInput, 'input', () => {
-            if (localStorage.getItem(ACTIVE_CONVERSATION_KEY)) {
-                localStorage.setItem('activeConversationName', elements.conversationNameInput.value);
-            }
+            if (localStorage.getItem(ACTIVE_CONVERSATION_KEY)) { localStorage.setItem('activeConversationName', elements.conversationNameInput.value); }
         });
         addSafeEventListener(elements.chatWindow, 'click', (event) => {
             const target = event.target.closest('.delete-message-btn');
-            if (target) {
-                const timestamp = target.dataset.timestamp;
-                handleDeleteMessage(timestamp);
-            }
+            if (target) { handleDeleteMessage(target.dataset.timestamp); }
         });
         addSafeEventListener(elements.userInput, 'keypress', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
-                if (isSearchMode) {
-                    performSearch();
-                } else {
-                    if (elements.userInput.value.trim().length > 0 || attachedImage.base64 !== null) {
-                        handleNewPrompt(3);
-                    }
-                }
+                if (isSearchMode) { performSearch(); }
+                else if (elements.userInput.value.trim().length > 0 || attachedImage.base64 !== null) { handleNewPrompt(3); }
             }
         });
         addSafeEventListener(elements.sendLevel1Btn, 'click', () => handleNewPrompt(1));
         addSafeEventListener(elements.sendLevel2Btn, 'click', () => handleNewPrompt(2));
         addSafeEventListener(elements.sendLevel3Btn, 'click', () => handleNewPrompt(3));
-        
-        // CORREÇÃO: Passa o 'event' para a função
-        addSafeEventListener(elements.saveApiKeyBtn, 'click', (event) => {
-            saveApiKey(event);
-        });
-        
+        addSafeEventListener(elements.saveApiKeyBtn, 'click', (event) => saveApiKey(event));
         addSafeEventListener(elements.changeApiKeyLink, 'click', (e) => {
             e.preventDefault();
             if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden');
         });
-        
         addSafeEventListener(elements.newChatLink, 'click', (e) => {
             e.preventDefault();
             showConfirmationModal(startNewChat);
         });
-
         addSafeEventListener(modalBtnCancel, 'click', hideConfirmationModal);
         addSafeEventListener(modalBtnDiscard, 'click', () => {
             if (typeof pendingAction === 'function') { pendingAction(); }
@@ -930,41 +826,28 @@ function loadConversation(timestamp) {
             if (typeof pendingAction === 'function') { pendingAction(); }
             hideConfirmationModal();
         });
-        
         addSafeEventListener(elements.continueBtn, 'click', handleContinue); 
         addSafeEventListener(elements.continueTypingBtn, 'click', handleStartNewPrompt); 
-        
         addSafeEventListener(elements.openSidebarBtn, 'click', () => {
-            if (elements.toolsSidebar) {
-                renderSavedConversations();
-                elements.toolsSidebar.classList.add('open');
-            }
+            if (elements.toolsSidebar) { renderSavedConversations(); elements.toolsSidebar.classList.add('open'); }
         });
         addSafeEventListener(elements.closeSidebarBtn, 'click', () => {
-            if (elements.toolsSidebar) {
-                elements.toolsSidebar.classList.remove('open');
-            }
+            if (elements.toolsSidebar) { elements.toolsSidebar.classList.remove('open'); }
         });
         addSafeEventListener(elements.saveConversationBtn, 'click', saveConversation);
         addSafeEventListener(elements.savedConversationsList, 'click', (event) => {
             const target = event.target;
             const timestamp = target.getAttribute('data-timestamp');
             if (!timestamp) return;
-            if (target.classList.contains('load-btn')) {
-                loadConversation(timestamp);
-            } else if (target.classList.contains('delete-btn')) {
-                deleteConversation(timestamp);
-            }
+            if (target.classList.contains('load-btn')) { loadConversation(timestamp); }
+            else if (target.classList.contains('delete-btn')) { deleteConversation(timestamp); }
         });
         addSafeEventListener(elements.importConversationBtn, 'click', importConversationFromFile);
         addSafeEventListener(elements.exportJsonBtn, 'click', exportConversationToJson);
         addSafeEventListener(elements.exportMdBtn, 'click', exportConversationToMarkdown);
         addSafeEventListener(elements.toggleSearchBtn, 'click', toggleSearchMode);
         addSafeEventListener(elements.searchBtn, 'click', performSearch);
-        addSafeEventListener(elements.clearSearchBtn, 'click', () => {
-            clearSearch();
-            elements.userInput.value = '';
-        });
+        addSafeEventListener(elements.clearSearchBtn, 'click', () => { clearSearch(); elements.userInput.value = ''; });
         addSafeEventListener(elements.analyzeTitleBtn, 'click', () => { callAnalysisAPI("Gere um título curto.", "Título"); });
         addSafeEventListener(elements.analyzeTopicsBtn, 'click', () => { callAnalysisAPI("Liste os tópicos.", "Tópicos"); });
         addSafeEventListener(elements.analyzeSummaryBtn, 'click', () => { callAnalysisAPI("Resuma os tópicos.", "Resumo"); });
@@ -976,11 +859,9 @@ function loadConversation(timestamp) {
             elements.sendLevel2Btn.disabled = true;
             elements.sendLevel3Btn.disabled = true;
             elements.userInput.style.height = 'auto';
-            // Chamada de foco mantida aqui, pois a limpeza implica que o usuário quer começar a digitar.
             elements.userInput.focus(); 
         });
         addSafeEventListener(window, 'beforeunload', saveActiveConversation);
-
         setupSystemPrompt();
         setupSpeedControl();
         setupImageUpload(); 
@@ -990,54 +871,34 @@ function loadConversation(timestamp) {
     function checkApiKey() {
         if (localStorage.getItem('geminiApiKey')) {
             if (elements.apiKeyModal) elements.apiKeyModal.classList.add('hidden');
-            
             const wasLoaded = loadActiveConversation();
-            if (!wasLoaded) {
-                startNewChat(); 
-            } else {
-                ui.unlockInput();
-                // REMOVIDO o foco aqui. O usuário pode ter voltado para a página para continuar lendo.
-            }
+            if (!wasLoaded) { startNewChat(); } else { ui.unlockInput(); }
         } else {
             if (elements.apiKeyModal) elements.apiKeyModal.classList.remove('hidden');
         }
     }
 
-    // ================================================================
-    // 10. SETUP IMAGE UPLOAD
-    // ================================================================
-
-function setupImageUpload() {
-    function resetImageState() {
-        attachedImage.base64 = null;
-        attachedImage.mimeType = null;
-        elements.imageInput.value = ''; 
-        elements.imagePreviewContainer.classList.add('hidden');
-    }
-
-    addSafeEventListener(elements.attachFileBtn, 'click', () => {
-        elements.imageInput.click(); 
-    });
-
-    addSafeEventListener(elements.removeImageBtn, 'click', resetImageState);
-
-    addSafeEventListener(elements.imageInput, 'change', (event) => {
-        const file = event.target.files[0];
-        if (!file || !file.type.startsWith('image/')) {
-            resetImageState();
-            return;
+    function setupImageUpload() {
+        function resetImageState() {
+            attachedImage.base64 = null;
+            attachedImage.mimeType = null;
+            elements.imageInput.value = ''; 
+            elements.imagePreviewContainer.classList.add('hidden');
         }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            attachedImage.mimeType = file.type;
-            attachedImage.base64 = e.target.result.split(',')[1];
-            
-            elements.imagePreview.src = e.target.result;
-            elements.imagePreviewContainer.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    });
-}
+        addSafeEventListener(elements.attachFileBtn, 'click', () => { elements.imageInput.click(); });
+        addSafeEventListener(elements.removeImageBtn, 'click', resetImageState);
+        addSafeEventListener(elements.imageInput, 'change', (event) => {
+            const file = event.target.files[0];
+            if (!file || !file.type.startsWith('image/')) { resetImageState(); return; }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                attachedImage.mimeType = file.type;
+                attachedImage.base64 = e.target.result.split(',')[1];
+                elements.imagePreview.src = e.target.result;
+                elements.imagePreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
     initializeApp();
 });
